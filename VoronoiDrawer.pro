@@ -37,7 +37,8 @@ HEADERS += \
     myscene.h \
     newmapdialog.h \
     voronoimap.h \
-    mygraphicsellipseitem.h
+    mygraphicsellipseitem.h \
+    json.hpp
 
 FORMS += \
         mainwindow.ui \

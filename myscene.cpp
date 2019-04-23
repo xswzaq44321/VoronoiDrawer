@@ -57,10 +57,8 @@ void MyScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void MyScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
-	qDebug() << event->scenePos();
 	QPointF point = event->scenePos();
 	vmap->addPoly(point.x(), point.y());
 	MyGraphicsEllipseItem *item = new MyGraphicsEllipseItem(point.x(), point.y());
 	this->addItem(item);
-	qDebug() << item->pos();
 }

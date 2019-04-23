@@ -35,6 +35,7 @@ protected:
 	void resizeEvent(QResizeEvent *event);
 private slots:
 	void on_actionNew_Map_triggered();
+	void on_actionSave_Json_triggered();
 };
 
 #endif // MAINWINDOW_H

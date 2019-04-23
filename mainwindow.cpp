@@ -49,3 +49,8 @@ void MainWindow::on_actionNew_Map_triggered()
 	vmap = new Voronoi(nmd.size.width(), nmd.size.height());
 	scene->vmap = vmap;
 }
+
+void MainWindow::on_actionSave_Json_triggered()
+{
+	qDebug() << vmap->toJson(4).c_str();
+}
