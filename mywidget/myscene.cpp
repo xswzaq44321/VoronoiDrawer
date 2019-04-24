@@ -31,10 +31,12 @@ voronoiMap::Voronoi *MyScene::createVmap()
 
 void MyScene::dragEnterEvent(QGraphicsSceneDragDropEvent *event)
 {
+	event->acceptProposedAction();
 }
 
 void MyScene::dragMoveEvent(QGraphicsSceneDragDropEvent *event)
 {
+	event->acceptProposedAction();
 }
 
 void MyScene::dropEvent(QGraphicsSceneDragDropEvent *event)
