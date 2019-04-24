@@ -45,12 +45,10 @@ void MainWindow::on_actionNew_Map_triggered()
 	scene->addRect(scene->sceneRect(), QPen(Qt::white), QBrush(Qt::white))->setZValue(-100);
 	ui->graphicsView->setScene(scene);
 	ui->graphicsView->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
-	delete vmap;
-	vmap = new Voronoi(nmd.size.width(), nmd.size.height());
-	scene->vmap = vmap;
 }
 
 void MainWindow::on_actionSave_Json_triggered()
 {
-	qDebug() << vmap->toJson(4).c_str();
+	if(scene != nullptr && scene->vmap != nullptr)
+		qDebug() << scene->vmap->toJson(4).c_str();
 }

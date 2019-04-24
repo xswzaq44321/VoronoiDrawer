@@ -9,9 +9,9 @@
 #include <QTimer>
 
 #include <memory>
-#include "myscene.h"
-#include "newmapdialog.h"
-#include "voronoimap.h"
+#include "mywidget/myscene.h"
+#include "dialogs/newmap/newmapdialog.h"
+#include "voronoi/voronoimap.h"
 
 namespace Ui {
 class MainWindow;
@@ -28,7 +28,6 @@ public:
 private:
 	Ui::MainWindow *ui;
 	MyScene *scene = nullptr;
-	voronoiMap::Voronoi *vmap = nullptr;
 
 	// QWidget interface
 protected:

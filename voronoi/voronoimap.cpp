@@ -3,6 +3,33 @@
 using namespace voronoiMap;
 using json = nlohmann::json;
 
+Rectangle::Rectangle()
+{
+}
+
+Rectangle::Rectangle(int x, int y, int width, int height):
+	x(x),y(y),
+	width(width),height(height)
+{
+	this->right = x + width;
+	this->bottom = y + height;
+}
+
+Rectangle::~Rectangle()
+{
+}
+
+bool Rectangle::contains(int x, int y)
+{
+	if(x > this->x && x < this->right){
+		if(y > this->y && y < this->bottom){
+			return true;
+		}
+	}
+	return false;
+}
+
+
 Point::Point()
 {
 }
@@ -21,6 +48,7 @@ double Point::distance(const Point &other)
 {
 	return 0;
 }
+
 PointF::PointF()
 {
 
@@ -130,16 +158,6 @@ Voronoi::~Voronoi()
 	}
 }
 
-void Voronoi::addPoly(double focusx, double focusy)
-{
-	Polygon *bar = new Polygon(focusx, focusy);
-	polygons.push_back(bar);
-}
-
-void Voronoi::addPoly(const Polygon &other)
-{
-}
-
 std::string Voronoi::toJson(int indent)
 {
 	json jj;
@@ -186,7 +204,7 @@ Point midPoint(const Point[])
 }
 
 template<typename T1, typename T2>
-void pairsort(voronoiMap::T1 a[], voronoiMap::T2 b[], int n)
+void pairsort(T1 a[], T2 b[], int n)
 {
 	std::pair<T1, T2> pairArr[n];
 

@@ -27,22 +27,22 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    myscene.cpp \
-    newmapdialog.cpp \
-    voronoimap.cpp \
-    mygraphicsellipseitem.cpp
+    mywidget/mygraphicsellipseitem.cpp \
+    mywidget/myscene.cpp \
+    dialogs/newmap/newmapdialog.cpp \
+    voronoi/voronoimap.cpp
 
 HEADERS += \
         mainwindow.h \
-    myscene.h \
-    newmapdialog.h \
-    voronoimap.h \
-    mygraphicsellipseitem.h \
-    json.hpp
+    mywidget/mygraphicsellipseitem.h \
+    mywidget/myscene.h \
+    dialogs/newmap/newmapdialog.h \
+    voronoi/json.hpp \
+    voronoi/voronoimap.h
 
 FORMS += \
         mainwindow.ui \
-    newmapdialog.ui
+    dialogs/newmap/newmapdialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -5,18 +5,22 @@
 #include <QDebug>
 #include <QSize>
 #include <QGraphicsSceneMouseEvent>
+#include <QVector>
 
-#include "voronoimap.h"
+#include "voronoi/voronoimap.h"
 #include "mygraphicsellipseitem.h"
 
 class MyScene : public QGraphicsScene
 {
 public:
 	MyScene();
-	MyScene(const QSize& size);
+	MyScene(const QSize &size);
 	~MyScene();
 
-	voronoiMap::Voronoi *vmap;
+	voronoiMap::Voronoi *vmap = nullptr;
+	QVector<MyGraphicsEllipseItem*> items;
+
+	voronoiMap::Voronoi* createVmap();
 
 	// QGraphicsScene interface
 protected:

@@ -8,28 +8,16 @@
 namespace voronoiMap {
 
 class Rectangle{
-	public:
-		Rectangle(int x, int y, int width, int height){
-			this->x = x;
-			this->y = y;
-			this->width = width;
-			this->height = height;
-			this->Right = x + width;
-			this->Bottom = y + height;
-		}
+public:
+	Rectangle();
+	Rectangle(int x, int y, int width, int height);
+	~Rectangle();
 
-		int x,y;
-		int width,height;
-		int Right, Bottom;
+	int x, y;
+	int width, height;
+	int right, bottom;
 
-		bool Contains(int x, int y){
-			if(x > this->x && x < this->Right){
-				if(y > this->y && y < this->Bottom){
-					return true;
-				}
-			}
-			return false;
-		}
+	bool contains(int x, int y);
 };
 
 struct Point
@@ -101,8 +89,6 @@ public:
 	int height;
 	std::vector<Polygon*> polygons;
 
-	void addPoly(double focusx, double focusy);
-	void addPoly(const Polygon& other);
 	std::string toJson(int indent);
 };
 
