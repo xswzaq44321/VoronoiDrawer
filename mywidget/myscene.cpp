@@ -22,10 +22,10 @@ voronoiMap::Voronoi *MyScene::createVmap()
 	delete vmap;
 	vmap = new Voronoi(this->width(), this->height());
 	for(MyGraphicsEllipseItem* it : items){
-		Polygon *bar = new Polygon(it->x(), it->y());
+		Polygon *bar = new Polygon(it->centerPos().x(), it->centerPos().y());
 		vmap->polygons.push_back(bar);
-		qDebug() << it->x() << ' ' << it->y();
 	}
+	return vmap;
 }
 
 
@@ -42,21 +42,24 @@ void MyScene::dropEvent(QGraphicsSceneDragDropEvent *event)
 }
 
 QPointF MousePrevPoint;
-QGraphicsItem *obj;
+MyGraphicsEllipseItem *obj;
 
 void MyScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
 	auto item = this->itemAt(event->scenePos(), QTransform());
-	if(dynamic_cast<QGraphicsEllipseItem*>(item) != nullptr){
+	if(dynamic_cast<MyGraphicsEllipseItem*>(item) != nullptr){
 		MousePrevPoint = event->scenePos();
-		obj = item;
+		obj = dynamic_cast<MyGraphicsEllipseItem*>(item);
 	}
 }
 
 void MyScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
 	if(obj != nullptr){
-		obj->setPos(obj->pos() + (event->scenePos() - MousePrevPoint));
+		QPointF newPos = obj->centerPos() + (event->scenePos() - MousePrevPoint);
+		if(this->sceneRect().contains(newPos)){
+			obj->setCenterPos(newPos.x(), newPos.y());
+		}
 		MousePrevPoint = event->scenePos();
 	}
 	createVmap();
@@ -74,7 +77,7 @@ void MyScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
 	QPointF point = event->scenePos();
 	MyGraphicsEllipseItem *item = new MyGraphicsEllipseItem(point.x(), point.y(), 5, 5);
-	item->setPos(point);
+	item->setPos(item->pos());
 	this->addItem(item);
 	items.push_back(item);
 	createVmap();

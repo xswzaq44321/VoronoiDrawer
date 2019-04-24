@@ -49,6 +49,15 @@ void MainWindow::on_actionNew_Map_triggered()
 
 void MainWindow::on_actionSave_Json_triggered()
 {
-	if(scene != nullptr && scene->vmap != nullptr)
-		qDebug() << scene->vmap->toJson(4).c_str();
+	if(scene != nullptr && scene->vmap != nullptr){
+		QString json_map = scene->vmap->toJson(4).c_str();
+		qDebug() << json_map;
+		QString filename = QFileDialog::getSaveFileName(this, "save json", "/", "voronoi map(*.json)");
+		QFile file(filename);
+		if(file.open(QIODevice::WriteOnly | QIODevice::Truncate)){
+			QTextStream stream(&file);
+			stream << json_map;
+		}
+		file.close();
+	}
 }

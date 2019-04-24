@@ -6,6 +6,7 @@
 #include <QSize>
 #include <QGraphicsSceneMouseEvent>
 #include <QVector>
+#include <QFileDialog>
 
 #include "voronoi/voronoimap.h"
 #include "mygraphicsellipseitem.h"
