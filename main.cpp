@@ -8,6 +8,8 @@ int main(int argc, char *argv[])
 	QApplication a(argc, argv);
 	MainWindow w;
 	w.show();
+	w.setWindowTitle("Voronoi Drawer");
+	w.setWindowIcon(QIcon(":/icon/small_icon"));
 
 	return a.exec();
 }

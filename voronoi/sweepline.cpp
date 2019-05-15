@@ -56,7 +56,7 @@ void SweepLine::finishEdges()
 
 }
 
-double SweepLine::parabolaX(const Point& foucs, double y)
+double SweepLine::parabolaX(const Point& focus, double y)
 {
 	double k = focus.y;
 	double h = (L + focus.x) / 2.0;

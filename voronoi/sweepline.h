@@ -10,15 +10,16 @@ constexpr double LMAXVALUE = 1e100;
 constexpr float MINVALUE = -1e30;
 constexpr float MAXVALUE = 1e30;
 
+class Event;
+
 class Parabola
 {
 public:
 	Parabola();
 	~Parabola();
 
-	PointF focus;
+	voronoiMap::PointF focus;
 	Event* event;
-
 };
 
 class Event
@@ -29,7 +30,7 @@ public:
 
 	std::list<Parabola*> relevants;
 	double x;
-	PointF center;
+	voronoiMap::PointF center;
 	bool isCircle;
 };
 
@@ -50,8 +51,8 @@ public:
 	void beachAdd(Parabola* para);
 	void dealCircleEvent(Event* eve);
 	void finishEdges();
-	double parabolaX(const Point& focus, double y);
-	PointF getIntersect(PointF* a, PointF* b);
+	double parabolaX(const voronoiMap::Point& focus, double y);
+	voronoiMap::PointF getIntersect(voronoiMap::PointF* a, voronoiMap::PointF* b);
 };
 
 #endif // SWEEPLINE_H

@@ -64,10 +64,17 @@
     </property>
     <addaction name="actionShow_Voronoi_Diagram"/>
    </widget>
+   <widget class="QMenu" name="menuSetting">
+    <property name="title">
+     <string>Setting</string>
+    </property>
+    <addaction name="actionStyle_Setting"/>
+   </widget>
    <addaction name="menuEdit"/>
    <addaction name="menuSave"/>
    <addaction name="menuLoad"/>
    <addaction name="menuShow"/>
+   <addaction name="menuSetting"/>
   </widget>
   <action name="actionSave_Json">
    <property name="text">
@@ -97,6 +104,11 @@
   <action name="actionNew_Map">
    <property name="text">
     <string>New Map</string>
+   </property>
+  </action>
+  <action name="actionStyle_Setting">
+   <property name="text">
+    <string>Style Setting</string>
    </property>
   </action>
  </widget>
