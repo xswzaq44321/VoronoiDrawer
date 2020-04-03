@@ -61,3 +61,23 @@ void MainWindow::on_actionSave_Json_triggered()
 		file.close();
 	}
 }
+
+void MainWindow::on_actionLoad_Json_triggered()
+{
+	QString json_map;
+	QString filename = QFileDialog::getOpenFileName(this, "load json", "/", "voronoi map(*.json)");
+	QFile file(filename);
+	if(file.open(QIODevice::ReadOnly)){
+		QTextStream stream(&file);
+		json_map = stream.readAll();
+
+		Voronoi* vmap = Voronoi::fromJson(json_map.toStdString());
+		if(scene == nullptr){
+			scene = new MyScene();
+			ui->graphicsView->setScene(scene);
+		}
+		scene->setVmap(vmap);
+		ui->graphicsView->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
+	}
+	file.close();
+}
