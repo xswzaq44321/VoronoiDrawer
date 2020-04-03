@@ -7,6 +7,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QVector>
 #include <QFileDialog>
+#include <memory>
 
 #include "voronoi/voronoimap.h"
 #include "mygraphicsellipseitem.h"
@@ -19,9 +20,27 @@ public:
 	~MyScene();
 
 	voronoiMap::Voronoi *vmap = nullptr;
-	QVector<MyGraphicsEllipseItem*> items;
+	QVector<std::shared_ptr<MyGraphicsEllipseItem>> ellipseItems;
+	QVector<std::shared_ptr<QGraphicsLineItem>> lineItems;
 
-	voronoiMap::Voronoi* createVmap();
+//	voronoiMap::Voronoi* createVmap(); // to be remove
+	/*!
+		\brief creates a blank vmap
+	*/
+	void setVmap();
+	/*!
+		\brief set vmap and sync content
+		\param vmap
+	*/
+	void setVmap(voronoiMap::Voronoi* vmap);
+	/*!
+		\brief clearContent clear scene and vmap
+	*/
+	void clearContent();
+	/*!
+		\brief syncVmap sync scene objects to vmap
+	*/
+	void syncVmap(); // stump
 
 	// QGraphicsScene interface
 protected:

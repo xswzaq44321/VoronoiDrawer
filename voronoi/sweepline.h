@@ -18,7 +18,7 @@ public:
 	Parabola();
 	~Parabola();
 
-	voronoiMap::PointF focus;
+	voronoiMap::PointF* focus;
 	Event* event;
 };
 
@@ -29,9 +29,9 @@ public:
 	~Event();
 
 	std::list<Parabola*> relevants;
-	double x;
-	voronoiMap::PointF center;
-	bool isCircle;
+	double x = -1;
+	voronoiMap::PointF center();
+	bool isCircle = false;
 };
 
 class SweepLine
@@ -51,6 +51,12 @@ public:
 	void beachAdd(Parabola* para);
 	void dealCircleEvent(Event* eve);
 	void finishEdges();
+	/**
+	 * @brief parabolaX get current parabora focus's x coordinate on y
+	 * @param focus
+	 * @param y
+	 * @return
+	 */
 	double parabolaX(const voronoiMap::Point& focus, double y);
 	voronoiMap::PointF getIntersect(voronoiMap::PointF* a, voronoiMap::PointF* b);
 };

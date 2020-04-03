@@ -31,7 +31,8 @@ SOURCES += \
     mywidget/myscene.cpp \
     dialogs/newmap/newmapdialog.cpp \
     voronoi/voronoimap.cpp \
-    voronoi/sweepline.cpp
+    voronoi/sweepline.cpp \
+    bst.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -40,7 +41,8 @@ HEADERS += \
     dialogs/newmap/newmapdialog.h \
     voronoi/json.hpp \
     voronoi/voronoimap.h \
-    voronoi/sweepline.h
+    voronoi/sweepline.h \
+    bst.h
 
 FORMS += \
         mainwindow.ui \

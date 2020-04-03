@@ -2,67 +2,102 @@
 #define VORONOIMAP_H
 
 #include <vector>
-#include <utility> //std::pair
+#include <utility>	//std::pair
+#include <cmath>	// M_PI
+#include <exception>
+#include <QtGlobal>
+#include <QPoint>
+#include <QPointF>
 #include "json.hpp"
 
 namespace voronoiMap {
 
-class Rectangle{
+class Rectangle;
+class Point;
+class PointF;
+class Edge;
+class Polygon;
+class Voronoi;
+
+class Rectangle
+{
 public:
 	Rectangle();
 	Rectangle(int x, int y, int width, int height);
-	~Rectangle();
+	~Rectangle() = default;
 
 	int x, y;
 	int width, height;
-	int right, bottom;
 
-	bool contains(int x, int y);
+	bool contains(int x, int y) const;
+	int getRight() const;
+	int getBottom() const;
 };
 
 struct Point
 {
-public:
 	Point();
 	Point(int x, int y);
-	~Point();
+	Point(const Point* old);
+	Point(const Point& old);
+	~Point() = default;
 
 	int x;
 	int y;
 
-	double distance(const Point& other);
+	double distance(const Point& other) const;
+	explicit operator PointF() const;
+#if QT_VERSION >= 0x040000
+	explicit operator QPoint() const;
+	explicit operator QPointF() const;
+#endif
 };
 
 struct PointF
 {
 	PointF();
-	~PointF();
+	PointF(double x, double y);
+	PointF(const PointF* old);
+	PointF(const PointF& old);
+	~PointF() = default;
 
 	double x;
 	double y;
 
-	double distance(const PointF& other);
-	operator Point() const;
+	double distance(const PointF& other) const;
+	explicit operator Point() const;
+#if QT_VERSION >= 0x040000
+	explicit operator QPoint() const;
+	explicit operator QPointF() const;
+#endif
 };
 
 class Edge
 {
 public:
 	Edge();
+	Edge(int id1, int id2, bool is_abs = false);
+	Edge(const Edge* old);
+	Edge(const Edge& old);
 	~Edge();
 
-	Point *a;
-	Point *b;
+	Point *a; // start point
+	Point *b; // end point
 	int parentID[2] = {-1, -1};
 
-	Point& get(const int& index);
-	double Distance(const Point& other);
+	Point* getParentID(const int& index);
+	double Distance(const Point& other) const;
+
+private:
+	bool is_abstract;
 };
 
 class Polygon
 {
 public:
 	Polygon();
+	Polygon(const Polygon* old);
+	Polygon(const Polygon& old);
 	Polygon(double focusx, double focusy);
 	~Polygon();
 
@@ -70,11 +105,12 @@ public:
 	Point *focus;
 	int id = -1;
 
-	bool contains(const Point& other);
+	bool contains(const Point& other); // stump
+	bool contains(const Point& other) const; // stump
 private:
 	bool organized;
 
-	void organize();
+	void organize(); // stump
 };
 
 class Voronoi
@@ -82,7 +118,9 @@ class Voronoi
 public:
 	Voronoi();
 	Voronoi(int width, int height);
-	Voronoi(const std::string& json_map);
+//	Voronoi(const std::string& json_map);
+	Voronoi(const Voronoi* old);
+	Voronoi(const Voronoi& old);
 	~Voronoi();
 
 	int width;
@@ -90,14 +128,31 @@ public:
 	std::vector<Polygon*> polygons;
 
 	std::string toJson(int indent);
+	static Voronoi* fromJson(const std::string&& json_map);
 };
 
+/**
+ * @brief getVector calculates vector form a to b
+ * @param a start point
+ * @param b end point
+ * @return a vector from a to b
+ */
 Point getVector(const Point& a, const Point& b);
+/**
+ * @brief cross calculates cross value of points a, b, o
+ * @param a
+ * @param b
+ * @param o
+ * @return cross value of vector oa x ob
+ */
 double cross(const Point& a, const Point& b, const Point& o);
-Point midPoint(const Point[]);
+PointF midPoint(const std::vector<Point>& points);
 
 template<typename T1, typename T2>
 void pairsort(T1 a[], T2 b[], int n);
+
+template<typename T1, typename T2, class Compare>
+void pairsort(T1 a[], T2 b[], int n, Compare comp);
 
 }
 
