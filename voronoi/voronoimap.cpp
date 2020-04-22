@@ -1,5 +1,4 @@
 #include "voronoimap.h"
-#define PI M_PI
 
 using namespace voronoiMap;
 using json = nlohmann::json;
@@ -55,14 +54,19 @@ Point::Point(const Point &old):
 {
 }
 
+Point::Point(const PointF *old):
+	x(old->x), y(old->y)
+{
+}
+
+Point::Point(const PointF &old):
+	x(old.x), y(old.y)
+{
+}
+
 double Point::distance(const Point &other) const
 {
 	return sqrt(pow(this->x - other.x, 2) + pow(this->y - other.y, 2));
-}
-
-Point::operator PointF() const
-{
-	return PointF(x, y);
 }
 
 #if QT_VERSION >= 0X040000
@@ -71,7 +75,7 @@ Point::operator QPoint() const
 	return QPoint(x, y);
 }
 
-Point::operator QPointF() const
+voronoiMap::Point::operator QPointF() const
 {
 	return QPointF(x, y);
 }
@@ -92,6 +96,16 @@ PointF::PointF(const PointF *old):
 }
 
 PointF::PointF(const PointF &old):
+	x(old.x), y(old.y)
+{
+}
+
+PointF::PointF(const Point *old):
+	x(old->x), y(old->y)
+{
+}
+
+PointF::PointF(const Point &old):
 	x(old.x), y(old.y)
 {
 }
@@ -166,6 +180,11 @@ Point* Edge::getParentID(const int &index)
 		throw std::out_of_range("Edge::get: index must be in the range of [0, 1]");
 }
 
+bool Edge::hasParentID(const int id)
+{
+	return std::find(parentID, parentID + 2, id) != (parentID + 2);
+}
+
 double Edge::Distance(const Point &other) const
 {
 	if(b == nullptr || a == nullptr)
@@ -173,6 +192,16 @@ double Edge::Distance(const Point &other) const
 	double bar = abs((b->y - a->y)*other.x - (b->x - a->x)*other.y + b->x*a->y - b->y*a->x);
 	double bar2 = sqrt(pow(b->y - a->y, 2) + pow(b->x - a->x, 2));
 	return bar / bar2;
+}
+
+bool Edge::isAbstract()
+{
+	return is_abstract;
+}
+
+void Edge::deAbstract()
+{
+	this->is_abstract = false;
 }
 
 Polygon::Polygon():
@@ -404,7 +433,7 @@ PointF voronoiMap::midPoint(const std::vector<Point>& points)
 template<typename T1, typename T2>
 void voronoiMap::pairsort(T1 a[], T2 b[], int n)
 {
-	std::pair<T1, T2> pairArr[n];
+	std::vector<std::pair<T1, T2>> pairArr(n);
 
 	// Storing the respective array
 	// elements in pairs.
@@ -415,7 +444,7 @@ void voronoiMap::pairsort(T1 a[], T2 b[], int n)
 	}
 
 	// Sorting the pair array.
-	std::sort(pairArr, pairArr + n);
+	std::sort(pairArr.begin(), pairArr.end());
 
 	// Modifying original arrays
 	for (int i = 0; i < n; i++)

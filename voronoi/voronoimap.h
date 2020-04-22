@@ -3,12 +3,13 @@
 
 #include <vector>
 #include <utility>	//std::pair
-#include <cmath>	// M_PI
 #include <exception>
 #include <QtGlobal>
 #include <QPoint>
 #include <QPointF>
+#include <algorithm>
 #include "json.hpp"
+#define PI 3.1415926535
 
 namespace voronoiMap {
 
@@ -40,6 +41,8 @@ struct Point
 	Point(int x, int y);
 	Point(const Point* old);
 	Point(const Point& old);
+	Point(const PointF* old);
+	Point(const PointF& old);
 	~Point() = default;
 
 	int x;
@@ -59,6 +62,8 @@ struct PointF
 	PointF(double x, double y);
 	PointF(const PointF* old);
 	PointF(const PointF& old);
+	PointF(const Point* old);
+	PointF(const Point& old);
 	~PointF() = default;
 
 	double x;
@@ -86,7 +91,10 @@ public:
 	int parentID[2] = {-1, -1};
 
 	Point* getParentID(const int& index);
+	bool hasParentID(const int id);
 	double Distance(const Point& other) const;
+	bool isAbstract();
+	void deAbstract();
 
 private:
 	bool is_abstract;

@@ -81,3 +81,8 @@ void MainWindow::on_actionLoad_Json_triggered()
 	}
 	file.close();
 }
+
+void MainWindow::on_actionShow_Voronoi_Diagram_triggered()
+{
+
+}
