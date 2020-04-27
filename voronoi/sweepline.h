@@ -8,10 +8,7 @@
 #include <algorithm>
 #include "voronoimap.h"
 
-constexpr double LMINVALUE = -1e100;
-constexpr double LMAXVALUE = 1e100;
-constexpr float MINVALUE = -1e30;
-constexpr float MAXVALUE = 1e30;
+#include <QDebug>
 
 class Event;
 
@@ -98,6 +95,14 @@ public:
 	*/
 	double parabolaX(const voronoiMap::Point& focus, double y);
 	voronoiMap::PointF getIntersect(voronoiMap::PointF* a, voronoiMap::PointF* b);
+	voronoiMap::PointF getIntersect(voronoiMap::Point *a, voronoiMap::Point *b);
+
+
+public:
+	const double LMINVALUE = -1e100;
+	const double LMAXVALUE = 1e100;
+	const float MINVALUE = -1e30;
+	const float MAXVALUE = 1e30;
 };
 
 class calculator{

@@ -82,7 +82,31 @@ void MainWindow::on_actionLoad_Json_triggered()
 	file.close();
 }
 
-void MainWindow::on_actionShow_Voronoi_Diagram_triggered()
+void MainWindow::on_actionRun_Fortune_Algorithm_triggered()
 {
+	if(scene->vmap == nullptr)
+		return;
+	if(scene->sweepLine == nullptr)
+		scene->sweepLine = new SweepLine(scene->vmap);
+	while(scene->sweepLine->nextEvent() != scene->sweepLine->LMAXVALUE);
+	scene->sweepLine->finishEdges();
+	for(Polygon* poly : scene->vmap->polygons){
+		poly->organize();
+	}
+	scene->syncVmap();
+}
 
+void MainWindow::on_actionStep_Fortune_Algorithm_triggered()
+{
+	if(scene->vmap == nullptr)
+		return;
+	if(scene->sweepLine == nullptr)
+		scene->sweepLine = new SweepLine(scene->vmap);
+	if(scene->sweepLine->nextEvent() == scene->sweepLine->LMAXVALUE){
+		scene->sweepLine->finishEdges();
+		for(Polygon* poly : scene->vmap->polygons){
+			poly->organize();
+		}
+	}
+	scene->syncFortune();
 }

@@ -4,10 +4,9 @@ using namespace voronoiMap;
 
 Parabola::Parabola(voronoiMap::Point* focus, voronoiMap::Polygon* poly):
 	event(nullptr),
+	focus(new PointF(focus->x, focus->y)),
 	poly(poly)
 {
-	this->focus->x = focus->x;
-	this->focus->y = focus->y;
 }
 
 Parabola::~Parabola()
@@ -107,12 +106,10 @@ double SweepLine::nextEvent()
 	// get next event location
 	// might be site event or circle event
 	Event* nextEvent = nullptr;
-	if(siteEvents.size() > 0){
+	if(siteEvents.size() > 0)
 		nextEvent = siteEvents.top();
-		if(circleEvents.size() > 0 && nextEvent->x >= circleEvents.top()->x){
-			nextEvent = circleEvents.top();
-		}
-	}
+	if((nextEvent == nullptr) || circleEvents.size() > 0 && nextEvent->x >= circleEvents.top()->x)
+		nextEvent = circleEvents.top();
 	L = nextEvent->x;
 	if(!nextEvent->isCircle){
 		// site event
@@ -168,10 +165,10 @@ void SweepLine::beachAdd(Parabola *para)
 {
 	int pos = 0;
 	Parabola *pj = nullptr;
-	for (int i = 0; i < beachParas.size() - 2; ++i) {
+	for (int i = 0; i < (int)beachParas.size() - 2; ++i) {
 		auto intersect = getIntersect(beachParas[i]->focus, beachParas[i + 1]->focus);
 		auto intersect2 = getIntersect(beachParas[i + 1]->focus, beachParas[i + 2]->focus);
-		if(intersect.y < para->focus->y && intersect2.y < para->focus->y){
+		if(intersect.y < para->focus->y && intersect2.y > para->focus->y){
 			pos = i + 1;
 			break;
 		}
@@ -260,7 +257,7 @@ void SweepLine::dealCircleEvent(Event *eve)
 	int p1 = eve->relevants[0]->poly->id;
 	int p2 = eve->relevants[1]->poly->id;
 	int p3 = eve->relevants[2]->poly->id;
-	for (int i = 0; i < beachParas.size() - 2; ++i) {
+	for (int i = 0; i < (int)beachParas.size() - 2; ++i) {
 		if(beachParas[i]->poly->id == p1 && beachParas[i + 1]->poly->id == p2 && beachParas[i + 2]->poly->id == p3){
 			if(i > 0){
 				Parabola* pp1 = beachParas[i - 1];
@@ -273,7 +270,7 @@ void SweepLine::dealCircleEvent(Event *eve)
 					}
 				}
 			}
-			if(i < beachParas.size() - 3){
+			if(i < (int)beachParas.size() - 3){
 				Parabola* pp1 = beachParas[i];
 				Parabola* pp2 = beachParas[i + 2];
 				Parabola* pp3 = beachParas[i + 3];
@@ -307,11 +304,11 @@ void SweepLine::finishEdges()
 {
 	// set L large enough
 	L = 2 * vmap->width + 2 * vmap->height;
-	for (int i = 0; i < beachParas.size() - 1; i++)
+	for (int i = 0; i < (int)beachParas.size() - 1; i++)
 	{
 		Polygon* p1 = beachParas[i]->poly;
 		Polygon* p2 = beachParas[i + 1]->poly;
-		PointF cross = getIntersect((PointF*)p1->focus, (PointF*)p2->focus);
+		PointF cross = getIntersect(p1->focus, p2->focus);
 		for(auto &edge : p1->edges)
 		{
 			if(edge->hasParentID(p2->id))
@@ -385,6 +382,12 @@ PointF SweepLine::getIntersect(PointF *A, PointF *B)
 		double x = pow(y - ka, 2) / (4 * ca) + ha;
 		return PointF(x, y);
 	}
+}
+
+PointF SweepLine::getIntersect(Point *a, Point *b)
+{
+	PointF A(a), B(b);
+	return getIntersect(&A, &B);
 }
 
 double calculator::det(double m[3][3]){

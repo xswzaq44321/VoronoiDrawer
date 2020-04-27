@@ -41,7 +41,7 @@ void MyScene::setVmap()
 
 void MyScene::setVmap(Voronoi *vmap)
 {
-	delete vmap;
+	delete this->vmap;
 	this->vmap = vmap;
 	this->syncVmap();
 }
@@ -50,14 +50,16 @@ void MyScene::clearContent()
 {
 	delete vmap;
 	vmap = nullptr;
-	this->clear();
 	ellipseItems.clear();
 	lineItems.clear();
+	this->clear();
 }
 
 void MyScene::syncVmap()
 {
-	this->clearContent();
+	ellipseItems.clear();
+	lineItems.clear();
+	this->clear();
 	this->setSceneRect(0, 0, vmap->width, vmap->height);
 	this->addRect(this->sceneRect(), QPen(Qt::white), QBrush(Qt::white))->setZValue(-100);
 	for(auto poly:vmap->polygons){
@@ -66,9 +68,19 @@ void MyScene::syncVmap()
 		this->addItem(item);
 		ellipseItems.push_back(std::shared_ptr<MyGraphicsEllipseItem>(item));
 		for(auto edge:poly->edges){
-			// wololo
+			if(edge->b == nullptr) continue;
+			QGraphicsLineItem* litem = new QGraphicsLineItem(edge->a->x, edge->a->y, edge->b->x, edge->b->y);
+			this->addItem(litem);
+			lineItems.push_back(std::shared_ptr<QGraphicsLineItem>(litem));
 		}
 	}
+}
+
+void MyScene::syncFortune(){
+	this->syncVmap();
+	QGraphicsLineItem* litem = new QGraphicsLineItem(sweepLine->L, 0, sweepLine->L, vmap->height);
+	this->addItem(litem);
+	lineItems.push_back(std::shared_ptr<QGraphicsLineItem>(litem));
 }
 
 
@@ -88,6 +100,7 @@ void MyScene::dropEvent(QGraphicsSceneDragDropEvent *event)
 
 QPointF MousePrevPoint;
 MyGraphicsEllipseItem *obj;
+Polygon* pobj;
 
 void MyScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
@@ -95,6 +108,12 @@ void MyScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 	if(dynamic_cast<MyGraphicsEllipseItem*>(item) != nullptr){
 		MousePrevPoint = event->scenePos();
 		obj = dynamic_cast<MyGraphicsEllipseItem*>(item);
+		auto it = std::find_if(vmap->polygons.begin(), vmap->polygons.end(), [&](Polygon* a){
+				return a->focus->x == obj->x() && a->focus->y == obj->y();
+		});
+		if(it != vmap->polygons.end()){
+			pobj = *it;
+		}
 	}
 }
 
@@ -104,6 +123,10 @@ void MyScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 		QPointF newPos = obj->centerPos() + (event->scenePos() - MousePrevPoint);
 		if(this->sceneRect().contains(newPos)){
 			obj->setCenterPos(newPos.x(), newPos.y());
+			if(pobj){
+				pobj->focus->x = newPos.x();
+				pobj->focus->y = newPos.y();
+			}
 		}
 		MousePrevPoint = event->scenePos();
 	}
@@ -115,7 +138,6 @@ void MyScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 	obj = nullptr;
 	MousePrevPoint.setX(0);
 	MousePrevPoint.setY(0);
-//	createVmap();
 }
 
 void MyScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
@@ -125,5 +147,5 @@ void MyScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 	item->setPos(item->pos());
 	this->addItem(item);
 	ellipseItems.push_back(std::shared_ptr<MyGraphicsEllipseItem>(item));
-//	createVmap();
+	vmap->addPoly(new Polygon(point.x(), point.y()));
 }

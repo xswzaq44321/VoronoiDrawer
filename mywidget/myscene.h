@@ -11,6 +11,7 @@
 
 #include "voronoi/voronoimap.h"
 #include "mygraphicsellipseitem.h"
+#include "voronoi/sweepline.h"
 
 class MyScene : public QGraphicsScene
 {
@@ -20,6 +21,7 @@ public:
 	~MyScene();
 
 	voronoiMap::Voronoi *vmap = nullptr;
+	SweepLine *sweepLine = nullptr;
 	QVector<std::shared_ptr<MyGraphicsEllipseItem>> ellipseItems;
 	QVector<std::shared_ptr<QGraphicsLineItem>> lineItems;
 
@@ -40,7 +42,11 @@ public:
 	/*!
 		\brief syncVmap sync scene objects to vmap
 	*/
-	void syncVmap(); // stump
+	void syncVmap();
+	/*!
+	 * \brief syncFortune
+	 */
+	void syncFortune();
 
 	// QGraphicsScene interface
 protected:

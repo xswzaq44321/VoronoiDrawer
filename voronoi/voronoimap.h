@@ -115,10 +115,9 @@ public:
 
 	bool contains(const Point& other); // stump
 	bool contains(const Point& other) const; // stump
+	void organize(); // stump
 private:
 	bool organized;
-
-	void organize(); // stump
 };
 
 class Voronoi
@@ -137,6 +136,7 @@ public:
 
 	std::string toJson(int indent);
 	static Voronoi* fromJson(const std::string&& json_map);
+	Polygon* addPoly(Polygon* p);
 };
 
 /**

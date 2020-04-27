@@ -148,8 +148,8 @@ Edge::Edge(int id1, int id2, bool is_abs):
 
 Edge::Edge(const Edge *old)
 {
-	this->a = new Point(old->a);
-	this->b = new Point(old->b);
+	this->a = old->a ? new Point(old->a) : nullptr;
+	this->b = old->b ? new Point(old->b) : nullptr;
 	this->parentID[0] = old->parentID[0];
 	this->parentID[1] = old->parentID[1];
 	this->is_abstract = old->is_abstract;
@@ -383,7 +383,7 @@ std::string Voronoi::toJson(int indent)
 
 Voronoi* Voronoi::fromJson(const std::string &&json_map)
 {
-	Voronoi *newMap;
+	Voronoi *newMap = new Voronoi();
 	json jresult = json::parse(json_map);
 	newMap->width = jresult["width"];
 	newMap->height = jresult["height"];
@@ -406,6 +406,13 @@ Voronoi* Voronoi::fromJson(const std::string &&json_map)
 		newMap->polygons.push_back(poly);
 	}
 	return newMap;
+}
+
+Polygon* Voronoi::addPoly(Polygon *p)
+{
+	p->id = polygons.size();
+	polygons.push_back(p);
+	return p;
 }
 
 Point voronoiMap::getVector(const Point &a, const Point &b)

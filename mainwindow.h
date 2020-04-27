@@ -36,6 +36,8 @@ private slots:
 	void on_actionNew_Map_triggered();
 	void on_actionSave_Json_triggered();
 	void on_actionLoad_Json_triggered();
+	void on_actionStep_Fortune_Algorithm_triggered();
+	void on_actionRun_Fortune_Algorithm_triggered();
 };
 
 #endif // MAINWINDOW_H
