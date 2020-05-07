@@ -37,7 +37,9 @@ private slots:
 	void on_actionSave_Json_triggered();
 	void on_actionLoad_Json_triggered();
 	void on_actionStep_Fortune_Algorithm_triggered();
-	void on_actionRun_Fortune_Algorithm_triggered();
+	void on_actionRun_Fortune_Algorithm_triggered(bool checked);
+	void on_actionRun_Lloyd_triggered();
+	void on_actionRun_Mamemaki_triggered();
 };
 
 #endif // MAINWINDOW_H

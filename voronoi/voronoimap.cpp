@@ -55,12 +55,12 @@ Point::Point(const Point &old):
 }
 
 Point::Point(const PointF *old):
-	x(old->x), y(old->y)
+	x((int)old->x), y((int)old->y)
 {
 }
 
 Point::Point(const PointF &old):
-	x(old.x), y(old.y)
+	x((int)old.x), y((int)old.y)
 {
 }
 
@@ -69,17 +69,10 @@ double Point::distance(const Point &other) const
 	return sqrt(pow(this->x - other.x, 2) + pow(this->y - other.y, 2));
 }
 
-#if QT_VERSION >= 0X040000
-Point::operator QPoint() const
+bool Point::operator()(const Point &lhs, const Point &rhs)
 {
-	return QPoint(x, y);
+	return (lhs.x < rhs.x) || (lhs.x == rhs.x && lhs.y < rhs.y);
 }
-
-voronoiMap::Point::operator QPointF() const
-{
-	return QPointF(x, y);
-}
-#endif
 
 PointF::PointF()
 {
@@ -117,20 +110,8 @@ double PointF::distance(const PointF &other) const
 
 PointF::operator Point() const
 {
-	return Point(x, y);
+	return Point((int)x, (int)y);
 }
-
-#if QT_VERSION >= 0x040000
-PointF::operator QPoint() const
-{
-	return QPoint(x, y);
-}
-
-PointF::operator QPointF() const
-{
-	return QPointF(x, y);
-}
-#endif
 
 Edge::Edge():
 	a(nullptr),
@@ -234,8 +215,13 @@ Polygon::Polygon(const Polygon &old)
 	this->organized = old.organized;
 }
 
+Polygon::Polygon(Point *f)
+{
+	this->focus = f;
+}
+
 Polygon::Polygon(double focusx, double focusy):
-	focus(new Point(focusx, focusy))
+	focus(new Point((int)focusx, (int)focusy))
 {
 }
 
@@ -296,6 +282,24 @@ void Polygon::organize()
 	organized = true;
 }
 
+bool Polygon::isComplete()
+{
+	std::set<Point> s;
+	for(const Edge* it : edges){
+		if(s.count(*(it->a))){
+			s.erase(*(it->a));
+		}else{
+			s.insert(*(it->a));
+		}
+		if(s.count(*(it->b))){
+			s.erase(*(it->b));
+		}else{
+			s.insert(*(it->b));
+		}
+	}
+	return s.size() == 0;
+}
+
 Voronoi::Voronoi()
 {
 }
@@ -339,9 +343,12 @@ Voronoi::Voronoi(const Voronoi *old):
 	}
 }
 
-Voronoi::Voronoi(const Voronoi &old)
+Voronoi::Voronoi(const Voronoi &old):
+	width(old.width), height(old.height)
 {
-
+	for(const auto& poly : old.polygons){
+		polygons.push_back(new Polygon(poly));
+	}
 }
 
 Voronoi::~Voronoi()
@@ -410,7 +417,7 @@ Voronoi* Voronoi::fromJson(const std::string &&json_map)
 
 Polygon* Voronoi::addPoly(Polygon *p)
 {
-	p->id = polygons.size();
+	p->id = (int)polygons.size();
 	polygons.push_back(p);
 	return p;
 }
@@ -438,7 +445,7 @@ PointF voronoiMap::midPoint(const std::vector<Point>& points)
 }
 
 template<typename T1, typename T2>
-void voronoiMap::pairsort(T1 a[], T2 b[], int n)
+void voronoiMap::pairsort(T1 a[], T2 b[], size_t n)
 {
 	std::vector<std::pair<T1, T2>> pairArr(n);
 
@@ -462,7 +469,7 @@ void voronoiMap::pairsort(T1 a[], T2 b[], int n)
 }
 
 template<typename T1, typename T2, class Compare>
-void voronoiMap::pairsort(T1 a[], T2 b[], int n, Compare comp)
+void voronoiMap::pairsort(T1 a[], T2 b[], size_t n, Compare comp)
 {
 	std::pair<T1, T2> pairArr[n];
 
@@ -483,4 +490,9 @@ void voronoiMap::pairsort(T1 a[], T2 b[], int n, Compare comp)
 		a[i] = pairArr[i].first;
 		b[i] = pairArr[i].second;
 	}
+}
+
+bool voronoiMap::operator<(const Point &lhs, const Point &rhs)
+{
+	return (lhs.x < rhs.x) || (lhs.x == rhs.x && lhs.y < rhs.y);
 }

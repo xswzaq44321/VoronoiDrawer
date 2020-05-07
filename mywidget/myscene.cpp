@@ -10,12 +10,11 @@ MyScene::MyScene()
 MyScene::MyScene(const QSize& size):
 	QGraphicsScene(0, 0, size.width(), size.height())
 {
-	vmap = new Voronoi(size.width(), size.height());
+	voronoiGen.setVmap(new Voronoi(size.width(), size.height()));
 }
 
 MyScene::~MyScene()
 {
-	delete vmap;
 	//	qDebug() << typeid(*this).name() << "dtor";
 }
 
@@ -34,22 +33,18 @@ MyScene::~MyScene()
 
 void MyScene::setVmap()
 {
-	delete vmap;
-	vmap = new Voronoi(this->width(), this->height());
+	voronoiGen.setVmap(new Voronoi(this->width(), this->height()));
 	this->syncVmap();
 }
 
 void MyScene::setVmap(Voronoi *vmap)
 {
-	delete this->vmap;
-	this->vmap = vmap;
+	voronoiGen.setVmap(vmap);
 	this->syncVmap();
 }
 
 void MyScene::clearContent()
 {
-	delete vmap;
-	vmap = nullptr;
 	ellipseItems.clear();
 	lineItems.clear();
 	this->clear();
@@ -57,18 +52,19 @@ void MyScene::clearContent()
 
 void MyScene::syncVmap()
 {
+	const Voronoi *vmap = voronoiGen.vmap;
 	ellipseItems.clear();
 	lineItems.clear();
 	this->clear();
 	this->setSceneRect(0, 0, vmap->width, vmap->height);
 	this->addRect(this->sceneRect(), QPen(Qt::white), QBrush(Qt::white))->setZValue(-100);
-	for(auto poly:vmap->polygons){
+	for(const auto& poly:vmap->polygons){
 		MyGraphicsEllipseItem *item = new MyGraphicsEllipseItem(poly->focus->x, poly->focus->y, 5, 5);
 		item->setPos(item->pos());
 		this->addItem(item);
 		ellipseItems.push_back(std::shared_ptr<MyGraphicsEllipseItem>(item));
 		for(auto edge:poly->edges){
-			if(edge->b == nullptr) continue;
+			if(edge->a == nullptr || edge->b == nullptr) continue;
 			QGraphicsLineItem* litem = new QGraphicsLineItem(edge->a->x, edge->a->y, edge->b->x, edge->b->y);
 			this->addItem(litem);
 			lineItems.push_back(std::shared_ptr<QGraphicsLineItem>(litem));
@@ -77,10 +73,17 @@ void MyScene::syncVmap()
 }
 
 void MyScene::syncFortune(){
+	const SweepLine *sweepLine = voronoiGen.sweepLine;
+	if(sweepLine == nullptr) return;
 	this->syncVmap();
-	QGraphicsLineItem* litem = new QGraphicsLineItem(sweepLine->L, 0, sweepLine->L, vmap->height);
+	QGraphicsLineItem* litem = new QGraphicsLineItem(sweepLine->L, 0, sweepLine->L, voronoiGen.vmap->height);
 	this->addItem(litem);
 	lineItems.push_back(std::shared_ptr<QGraphicsLineItem>(litem));
+}
+
+void MyScene::setAutoFortune(bool action)
+{
+	autoFortune = action;
 }
 
 
@@ -104,12 +107,13 @@ Polygon* pobj;
 
 void MyScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
+	Voronoi *vmap = voronoiGen.vmap;
 	auto item = this->itemAt(event->scenePos(), QTransform());
 	if(dynamic_cast<MyGraphicsEllipseItem*>(item) != nullptr){
 		MousePrevPoint = event->scenePos();
 		obj = dynamic_cast<MyGraphicsEllipseItem*>(item);
 		auto it = std::find_if(vmap->polygons.begin(), vmap->polygons.end(), [&](Polygon* a){
-				return a->focus->x == obj->x() && a->focus->y == obj->y();
+				return abs(a->focus->x - (int)item->x()) < 5 && abs(a->focus->y - item->y()) < 5;
 		});
 		if(it != vmap->polygons.end()){
 			pobj = *it;
@@ -130,7 +134,8 @@ void MyScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 		}
 		MousePrevPoint = event->scenePos();
 	}
-//	createVmap();
+	if(autoFortune)
+		voronoiGen.performFortune();
 }
 
 void MyScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
@@ -147,5 +152,7 @@ void MyScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 	item->setPos(item->pos());
 	this->addItem(item);
 	ellipseItems.push_back(std::shared_ptr<MyGraphicsEllipseItem>(item));
-	vmap->addPoly(new Polygon(point.x(), point.y()));
+	voronoiGen.vmap->addPoly(new Polygon(point.x(), point.y()));
+	if(autoFortune)
+		voronoiGen.performFortune();
 }

@@ -49,8 +49,8 @@ void MainWindow::on_actionNew_Map_triggered()
 
 void MainWindow::on_actionSave_Json_triggered()
 {
-	if(scene != nullptr && scene->vmap != nullptr){
-		QString json_map = scene->vmap->toJson(4).c_str();
+	if(scene != nullptr && scene->voronoiGen.vmap != nullptr){
+		QString json_map = scene->voronoiGen.vmap->toJson(4).c_str();
 		qDebug() << json_map;
 		QString filename = QFileDialog::getSaveFileName(this, "save json", "/", "voronoi map(*.json)");
 		QFile file(filename);
@@ -82,31 +82,29 @@ void MainWindow::on_actionLoad_Json_triggered()
 	file.close();
 }
 
-void MainWindow::on_actionRun_Fortune_Algorithm_triggered()
+void MainWindow::on_actionRun_Fortune_Algorithm_triggered(bool checked)
 {
-	if(scene->vmap == nullptr)
-		return;
-	if(scene->sweepLine == nullptr)
-		scene->sweepLine = new SweepLine(scene->vmap);
-	while(scene->sweepLine->nextEvent() != scene->sweepLine->LMAXVALUE);
-	scene->sweepLine->finishEdges();
-	for(Polygon* poly : scene->vmap->polygons){
-		poly->organize();
+	if(checked){
+		scene->voronoiGen.performFortune();
+		scene->syncVmap();
 	}
-	scene->syncVmap();
+	scene->setAutoFortune(checked);
 }
 
 void MainWindow::on_actionStep_Fortune_Algorithm_triggered()
 {
-	if(scene->vmap == nullptr)
-		return;
-	if(scene->sweepLine == nullptr)
-		scene->sweepLine = new SweepLine(scene->vmap);
-	if(scene->sweepLine->nextEvent() == scene->sweepLine->LMAXVALUE){
-		scene->sweepLine->finishEdges();
-		for(Polygon* poly : scene->vmap->polygons){
-			poly->organize();
-		}
-	}
+	scene->voronoiGen.stepFortune();
 	scene->syncFortune();
+}
+
+void MainWindow::on_actionRun_Lloyd_triggered()
+{
+	scene->voronoiGen.performLloyd();
+	scene->syncVmap();
+}
+
+void MainWindow::on_actionRun_Mamemaki_triggered()
+{
+	scene->voronoiGen.mamemaki(Rectangle(0, 0, scene->voronoiGen.vmap->width, scene->voronoiGen.vmap->height), 100);
+	scene->syncVmap();
 }

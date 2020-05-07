@@ -176,9 +176,9 @@ void SweepLine::beachAdd(Parabola *para)
 			// first one
 			pos = i;
 			break;
-		}else if(i == beachParas.size() - 2 - 1){
+		}else if(i == (int)beachParas.size() - 2 - 1){
 			// last one
-			pos = beachParas.size() - 1;
+			pos = (int)beachParas.size() - 1;
 			break;
 		}
 	}
@@ -187,6 +187,7 @@ void SweepLine::beachAdd(Parabola *para)
 		beachParas.push_back(para);
 		return;
 	}
+	// pj is the one to be cut in half by this new added point
 	pj = beachParas[pos];
 	if(pj->focus->x == para->focus->x){
 		// special case, first few point on same x pos
@@ -221,7 +222,7 @@ void SweepLine::beachAdd(Parabola *para)
 		pj_r = beachParas[pos + 1];
 	beachParas.insert(beachParas.begin() + pos + 1, para);
 	beachParas.insert(beachParas.begin() + pos + 2, pj);
-	// now pi is on pos + 1
+	// now para is on pos + 1
 	pos++;
 
 	// add to edges
@@ -233,7 +234,7 @@ void SweepLine::beachAdd(Parabola *para)
 			return true;
 		return false;
 	});
-	// adding new triple involving para (which is left 2 & right 2 of para with para)
+	// adding new triple involving para (which is left 2 & right 2 parabola with current para)
 	for (int j = pos - 1; j <= pos + 1; j += 2) {
 		if((j - 1) < 0 || (j + 1) >= beachParas.size())
 			continue;
@@ -262,7 +263,7 @@ void SweepLine::dealCircleEvent(Event *eve)
 			if(i > 0){
 				Parabola* pp1 = beachParas[i - 1];
 				Parabola* pp2 = beachParas[i];
-				Parabola* pp3 = beachParas[i + 1];
+				Parabola* pp3 = beachParas[i + 2];
 				if((pp2->focus->x - pp1->focus->x) * (pp3->focus->y - pp1->focus->y) - (pp3->focus->x - pp1->focus->x) * (pp2->focus->y - pp1->focus->y) < 0){
 					Event* cirEve = new Event(pp1, pp2, pp3);
 					if(cirEve->x >= L){
@@ -309,14 +310,14 @@ void SweepLine::finishEdges()
 		Polygon* p1 = beachParas[i]->poly;
 		Polygon* p2 = beachParas[i + 1]->poly;
 		PointF cross = getIntersect(p1->focus, p2->focus);
-		for(auto &edge : p1->edges)
+		for(auto &&edge : p1->edges)
 		{
 			if(edge->hasParentID(p2->id))
 			{
 				edge->b = new Point(cross);
 			}
 		}
-		for(auto &edge : p2->edges)
+		for(auto &&edge : p2->edges)
 		{
 			if(edge->hasParentID(p1->id))
 			{

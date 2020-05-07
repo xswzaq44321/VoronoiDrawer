@@ -8,10 +8,12 @@
 #include <QVector>
 #include <QFileDialog>
 #include <memory>
+#include <cmath>
 
 #include "voronoi/voronoimap.h"
 #include "mygraphicsellipseitem.h"
 #include "voronoi/sweepline.h"
+#include "voronoi/voronoigen.h"
 
 class MyScene : public QGraphicsScene
 {
@@ -20,8 +22,7 @@ public:
 	MyScene(const QSize &size);
 	~MyScene();
 
-	voronoiMap::Voronoi *vmap = nullptr;
-	SweepLine *sweepLine = nullptr;
+	VoronoiGen voronoiGen;
 	QVector<std::shared_ptr<MyGraphicsEllipseItem>> ellipseItems;
 	QVector<std::shared_ptr<QGraphicsLineItem>> lineItems;
 
@@ -47,6 +48,7 @@ public:
 	 * \brief syncFortune
 	 */
 	void syncFortune();
+	void setAutoFortune(bool action);
 
 	// QGraphicsScene interface
 protected:
@@ -57,6 +59,9 @@ protected:
 	void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
 	void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 	void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
+
+private:
+	bool autoFortune = false;
 };
 
 #endif // MYSCENE_H

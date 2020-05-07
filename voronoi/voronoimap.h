@@ -4,18 +4,16 @@
 #include <vector>
 #include <utility>	//std::pair
 #include <exception>
-#include <QtGlobal>
-#include <QPoint>
-#include <QPointF>
 #include <algorithm>
+#include <set>
 #include "json.hpp"
 #define PI 3.1415926535
 
 namespace voronoiMap {
 
 class Rectangle;
-class Point;
-class PointF;
+struct Point;
+struct PointF;
 class Edge;
 class Polygon;
 class Voronoi;
@@ -50,11 +48,10 @@ struct Point
 
 	double distance(const Point& other) const;
 	explicit operator PointF() const;
-#if QT_VERSION >= 0x040000
-	explicit operator QPoint() const;
-	explicit operator QPointF() const;
-#endif
+	bool operator()(const Point& lhs, const Point& rhs);
 };
+
+bool operator<(const Point& lhs, const Point& rhs);
 
 struct PointF
 {
@@ -71,10 +68,6 @@ struct PointF
 
 	double distance(const PointF& other) const;
 	explicit operator Point() const;
-#if QT_VERSION >= 0x040000
-	explicit operator QPoint() const;
-	explicit operator QPointF() const;
-#endif
 };
 
 class Edge
@@ -106,6 +99,7 @@ public:
 	Polygon();
 	Polygon(const Polygon* old);
 	Polygon(const Polygon& old);
+	Polygon(Point* f);
 	Polygon(double focusx, double focusy);
 	~Polygon();
 
@@ -115,7 +109,8 @@ public:
 
 	bool contains(const Point& other); // stump
 	bool contains(const Point& other) const; // stump
-	void organize(); // stump
+	void organize();
+	bool isComplete();
 private:
 	bool organized;
 };
@@ -157,10 +152,10 @@ double cross(const Point& a, const Point& b, const Point& o);
 PointF midPoint(const std::vector<Point>& points);
 
 template<typename T1, typename T2>
-void pairsort(T1 a[], T2 b[], int n);
+void pairsort(T1 a[], T2 b[], size_t n);
 
 template<typename T1, typename T2, class Compare>
-void pairsort(T1 a[], T2 b[], int n, Compare comp);
+void pairsort(T1 a[], T2 b[], size_t n, Compare comp);
 
 }
 

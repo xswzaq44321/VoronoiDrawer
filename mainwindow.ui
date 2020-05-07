@@ -66,6 +66,9 @@
     <addaction name="actionStep_Fortune_Algorithm"/>
     <addaction name="separator"/>
     <addaction name="separator"/>
+    <addaction name="actionRun_Lloyd"/>
+    <addaction name="separator"/>
+    <addaction name="actionRun_Mamemaki"/>
    </widget>
    <widget class="QMenu" name="menuSetting">
     <property name="title">
@@ -115,6 +118,9 @@
    </property>
   </action>
   <action name="actionRun_Fortune_Algorithm">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Run Fortune Algorithm</string>
    </property>
@@ -122,6 +128,16 @@
   <action name="actionStep_Fortune_Algorithm">
    <property name="text">
     <string>Step Fortune Algorithm</string>
+   </property>
+  </action>
+  <action name="actionRun_Lloyd">
+   <property name="text">
+    <string>Run Lloyd</string>
+   </property>
+  </action>
+  <action name="actionRun_Mamemaki">
+   <property name="text">
+    <string>Run Mamemaki</string>
    </property>
   </action>
  </widget>

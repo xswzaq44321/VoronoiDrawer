@@ -63,8 +63,8 @@ public:
 		}
 	}
 	void removeAll(std::function<bool(T)> pred){
-		c.erase(std::remove_if(c.begin(), c.end(), pred), c.end());
-		std::make_heap(c.begin(), c.end(), comp);
+		this->c.erase(std::remove_if(this->c.begin(), this->c.end(), pred), this->c.end());
+		std::make_heap(this->c.begin(), this->c.end(), this->comp);
 	}
 };
 
