@@ -86,7 +86,7 @@ public:
 	Point* getParentID(const int& index);
 	bool hasParentID(const int id);
 	double Distance(const Point& other) const;
-	bool isAbstract();
+	bool isAbstract() const;
 	void deAbstract();
 
 private:

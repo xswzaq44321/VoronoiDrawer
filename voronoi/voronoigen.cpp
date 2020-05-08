@@ -3,15 +3,30 @@
 using namespace voronoiMap;
 using namespace std;
 
+VoronoiGen::VoronoiGen():
+	VoronoiGen(nullptr)
+{
+}
+
 VoronoiGen::VoronoiGen(Voronoi *vmap):
 	vmap(vmap)
 {
+	random_device rd;
+	default_random_engine gen = std::default_random_engine(rd());
+	uniform_int_distribution<int> dis(INT_MIN, INT_MAX);
+
+	this->seed = dis(gen);
+	mamemakiNoise = new FastNoise(seed);
+	perlinNoise = new FastNoise(seed);
+	qDebug() << "seed = " << seed;
 }
 
 VoronoiGen::~VoronoiGen()
 {
 	delete vmap;
 	delete sweepLine;
+	delete mamemakiNoise;
+	delete perlinNoise;
 }
 
 void VoronoiGen::setVmap(voronoiMap::Voronoi *vmap)
@@ -48,13 +63,19 @@ void VoronoiGen::performFortune()
 {
 	if(vmap == nullptr)
 		return;
-	if(sweepLine == nullptr)
+	if(sweepLine == nullptr){
+		for (auto && it: vmap->polygons) {
+			it->edges.clear();
+		}
 		sweepLine = new SweepLine(vmap);
+	}
 	while(sweepLine->nextEvent() != sweepLine->LMAXVALUE);
 	sweepLine->finishEdges();
 //	for(Polygon* poly : vmap->polygons){
 //		poly->organize();
 //	}
+	delete sweepLine;
+	sweepLine = nullptr;
 }
 
 void VoronoiGen::performLloyd()
@@ -85,22 +106,27 @@ void VoronoiGen::performLloyd()
 	sweepLine = nullptr;
 }
 
-void VoronoiGen::mamemaki(Rectangle&& range, int count)
+void VoronoiGen::generateTerrain()
+{
+
+}
+
+void VoronoiGen::mamemaki(const Rectangle&& range, double threshold)
 {
 	vector<pair<float, Point>> v;
-	for (int i = 0; i < range.width; ++i) {
-		for (int j = 0; j < range.height; ++j) {
+	for (int i = -mamemakiOffset; i < range.width + mamemakiOffset; ++i) {
+		for (int j =  -mamemakiOffset; j < range.height + mamemakiOffset; ++j) {
 			int x, y;
 			x = i + range.x;
 			y = j + range.y;
-			v.push_back(make_pair(myNoise.GetWhiteNoise(x, y), Point(x, y)));
+			if(mamemakiNoise->GetWhiteNoise(x, y) >= threshold){
+				vmap->addPoly(new Polygon(new Point(x, y)));
+			}
 		}
 	}
-	std::sort(v.begin(), v.end(), [](pair<float, Point> lhs, pair<float, Point> rhs){
-		return lhs.first < rhs.first;
-	});
-	for (int i = 0; i < count; ++i) {
-		auto temp = v[i].second;
-		vmap->addPoly(new Polygon(new Point(v[i].second)));
-	}
+}
+
+int VoronoiGen::getSeed() const
+{
+	return seed;
 }

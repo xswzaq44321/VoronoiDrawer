@@ -175,7 +175,7 @@ double Edge::Distance(const Point &other) const
 	return bar / bar2;
 }
 
-bool Edge::isAbstract()
+bool Edge::isAbstract() const
 {
 	return is_abstract;
 }
@@ -286,6 +286,9 @@ bool Polygon::isComplete()
 {
 	std::set<Point> s;
 	for(const Edge* it : edges){
+		// incomplete edge
+		if(it->isAbstract() || it->b == nullptr)
+			return false;
 		if(s.count(*(it->a))){
 			s.erase(*(it->a));
 		}else{

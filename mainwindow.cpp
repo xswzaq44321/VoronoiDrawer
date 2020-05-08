@@ -105,6 +105,6 @@ void MainWindow::on_actionRun_Lloyd_triggered()
 
 void MainWindow::on_actionRun_Mamemaki_triggered()
 {
-	scene->voronoiGen.mamemaki(Rectangle(0, 0, scene->voronoiGen.vmap->width, scene->voronoiGen.vmap->height), 100);
+	scene->voronoiGen.mamemaki(Rectangle(0, 0, scene->voronoiGen.vmap->width, scene->voronoiGen.vmap->height), 0.99);
 	scene->syncVmap();
 }

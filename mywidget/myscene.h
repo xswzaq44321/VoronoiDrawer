@@ -43,7 +43,7 @@ public:
 	/*!
 		\brief syncVmap sync scene objects to vmap
 	*/
-	void syncVmap();
+	void syncVmap(bool updatePoint = true);
 	/*!
 	 * \brief syncFortune
 	 */

@@ -4,6 +4,10 @@
 #include <vector>
 #include <numeric>
 #include <algorithm>
+#include <random>
+#include <climits>
+
+#include <QDebug>
 
 #include "voronoimap.h"
 #include "sweepline.h"
@@ -12,20 +16,32 @@
 class VoronoiGen
 {
 public:
-	VoronoiGen() = default;
+	VoronoiGen();
 	VoronoiGen(voronoiMap::Voronoi *vmap);
 	~VoronoiGen();
 
 	voronoiMap::Voronoi *vmap = nullptr;
 	SweepLine *sweepLine = nullptr;
-	FastNoise myNoise;
+	FastNoise *mamemakiNoise;
+	FastNoise *perlinNoise;
 
 	void setVmap(voronoiMap::Voronoi *vmap);
 	void clearVmap();
+	/*!
+	 * \brief mamemaki
+	 * \param range
+	 * \param threshold [-1.0~1.0]
+	 */
+	void mamemaki(const voronoiMap::Rectangle&& range, double threshold);
+	int getSeed() const;
 	void stepFortune();
 	void performFortune();
 	void performLloyd();
-	void mamemaki(voronoiMap::Rectangle&& range, int count);
+	void generateTerrain();
+
+private:
+	int seed;
+	int mamemakiOffset = 100;
 };
 
 #endif // VORONOIGEN_H

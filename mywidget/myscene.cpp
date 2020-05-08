@@ -50,19 +50,28 @@ void MyScene::clearContent()
 	this->clear();
 }
 
-void MyScene::syncVmap()
+void MyScene::syncVmap(bool updatePoint)
 {
 	const Voronoi *vmap = voronoiGen.vmap;
-	ellipseItems.clear();
+	if(updatePoint){
+		for (std::shared_ptr<MyGraphicsEllipseItem> it : ellipseItems) {
+			this->removeItem(it.get());
+		}
+		ellipseItems.clear();
+	}
+	for (std::shared_ptr<QGraphicsLineItem> it : lineItems) {
+		this->removeItem(it.get());
+	}
 	lineItems.clear();
-	this->clear();
 	this->setSceneRect(0, 0, vmap->width, vmap->height);
 	this->addRect(this->sceneRect(), QPen(Qt::white), QBrush(Qt::white))->setZValue(-100);
 	for(const auto& poly:vmap->polygons){
-		MyGraphicsEllipseItem *item = new MyGraphicsEllipseItem(poly->focus->x, poly->focus->y, 5, 5);
-		item->setPos(item->pos());
-		this->addItem(item);
-		ellipseItems.push_back(std::shared_ptr<MyGraphicsEllipseItem>(item));
+		if(updatePoint){
+			MyGraphicsEllipseItem *item = new MyGraphicsEllipseItem(poly->focus->x, poly->focus->y, 5, 5);
+			item->setPos(item->pos());
+			this->addItem(item);
+			ellipseItems.push_back(std::shared_ptr<MyGraphicsEllipseItem>(item));
+		}
 		for(auto edge:poly->edges){
 			if(edge->a == nullptr || edge->b == nullptr) continue;
 			QGraphicsLineItem* litem = new QGraphicsLineItem(edge->a->x, edge->a->y, edge->b->x, edge->b->y);
@@ -134,8 +143,10 @@ void MyScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 		}
 		MousePrevPoint = event->scenePos();
 	}
-	if(autoFortune)
+	if(autoFortune){
 		voronoiGen.performFortune();
+		this->syncVmap(false);
+	}
 }
 
 void MyScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
@@ -153,6 +164,8 @@ void MyScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 	this->addItem(item);
 	ellipseItems.push_back(std::shared_ptr<MyGraphicsEllipseItem>(item));
 	voronoiGen.vmap->addPoly(new Polygon(point.x(), point.y()));
-	if(autoFortune)
+	if(autoFortune){
 		voronoiGen.performFortune();
+		this->syncVmap();
+	}
 }
