@@ -40,6 +40,7 @@ private slots:
 	void on_actionRun_Fortune_Algorithm_triggered(bool checked);
 	void on_actionRun_Lloyd_triggered();
 	void on_actionRun_Mamemaki_triggered();
+	void on_actionRun_Terrain_Gen_triggered();
 };
 
 #endif // MAINWINDOW_H

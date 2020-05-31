@@ -227,7 +227,9 @@ void SweepLine::beachAdd(Parabola *para)
 
 	// add to edges
 	para->poly->edges.push_back(new voronoiMap::Edge(para->poly->id, pj->poly->id, true));
+	para->poly->adjacents.push_back(pj->poly);
 	pj->poly->edges.push_back(new voronoiMap::Edge(para->poly->id, pj->poly->id, true));
+	pj->poly->adjacents.push_back(para->poly);
 
 	circleEvents.removeAll([&](Event* e){
 		if(e->relevants[0] == pj_l && e->relevants[1] == pj && e->relevants[2] == pj_r)

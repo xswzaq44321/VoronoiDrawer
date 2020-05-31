@@ -2,34 +2,23 @@
 
 using namespace voronoiMap;
 
-MyScene::MyScene()
-{
-//	qDebug() << typeid(*this).name() << "ctor";
-}
-
 MyScene::MyScene(const QSize& size):
 	QGraphicsScene(0, 0, size.width(), size.height())
 {
 	voronoiGen.setVmap(new Voronoi(size.width(), size.height()));
+	initialProgression();
+}
+
+MyScene::MyScene(Voronoi *vmap)
+{
+	this->setVmap(vmap);
+	initialProgression();
 }
 
 MyScene::~MyScene()
 {
 	//	qDebug() << typeid(*this).name() << "dtor";
 }
-
-//voronoiMap::Voronoi *MyScene::createVmap()
-//{
-//	delete vmap;
-//	vmap = new Voronoi(this->width(), this->height());
-//	int id = 0;
-//	for(MyGraphicsEllipseItem* it : items){
-//		Polygon *bar = new Polygon(it->centerPos().x(), it->centerPos().y());
-//		bar->id = id++;
-//		vmap->polygons.push_back(bar);
-//	}
-//	return vmap;
-//}
 
 void MyScene::setVmap()
 {
@@ -88,6 +77,29 @@ void MyScene::syncFortune(){
 	QGraphicsLineItem* litem = new QGraphicsLineItem(sweepLine->L, 0, sweepLine->L, voronoiGen.vmap->height);
 	this->addItem(litem);
 	lineItems.push_back(std::shared_ptr<QGraphicsLineItem>(litem));
+}
+
+void MyScene::drawTerrain(float max)
+{
+	this->clearContent();
+	QPixmap* canvas = new QPixmap(voronoiGen.vmap->width, voronoiGen.vmap->height);
+	canvas->fill();
+	QPainter painter(canvas);
+	const auto& pointMap = voronoiGen.pointMap;
+	for (int x = 0; x < pointMap.size(); ++x) {
+		for (int y = 0; y < pointMap.at(x).size(); ++y) {
+			auto altitude = pointMap.at(x).at(y).terrain.altitude;
+			double gradient = altitude / max;
+			gradient = std::max(0.0, std::min(1.0, gradient));
+			QColor color = terrProg.pixel(0, gradient * (terrProg.height() - 1));
+			painter.setPen(color);
+			painter.setBrush(color);
+			painter.drawPoint(x, y);
+		}
+	}
+
+	this->addPixmap(*canvas);
+	this->addPixmap(QPixmap::fromImage(terrProg))->setPos(this->width() - terrProg.width(), this->height() - terrProg.height());
 }
 
 void MyScene::setAutoFortune(bool action)
@@ -168,4 +180,18 @@ void MyScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 		voronoiGen.performFortune();
 		this->syncVmap();
 	}
+}
+
+void MyScene::initialProgression()
+{
+	QPixmap* canvas = new QPixmap(20, 150);
+	QPainter painter(canvas);
+	QLinearGradient linear(0, 0, 0, canvas->height());
+	linear.setColorAt(0, QColor::fromRgb(102, 51, 0));
+	linear.setColorAt(0.5, QColor::fromRgb(255, 255, 51));
+	linear.setColorAt(1, QColor::fromRgb(0, 102, 0));
+	painter.setBrush(linear);
+	painter.setPen(Qt::transparent);
+	painter.drawRect(0, 0, canvas->width(), canvas->height());
+	terrProg = canvas->toImage();
 }

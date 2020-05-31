@@ -24,6 +24,7 @@ public:
 	SweepLine *sweepLine = nullptr;
 	FastNoise *mamemakiNoise;
 	FastNoise *perlinNoise;
+	std::vector<std::vector<voronoiMap::Point>> pointMap;
 
 	void setVmap(voronoiMap::Voronoi *vmap);
 	void clearVmap();
@@ -42,6 +43,9 @@ public:
 private:
 	int seed;
 	int mamemakiOffset = 100;
+	int maxAltitude = 256;
+	int mapWidthX = 256;
+	int mapWidthY = 256;
 };
 
 #endif // VORONOIGEN_H

@@ -7,8 +7,10 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QVector>
 #include <QFileDialog>
+#include <QPainter>
 #include <memory>
 #include <cmath>
+#include <algorithm>
 
 #include "voronoi/voronoimap.h"
 #include "mygraphicsellipseitem.h"
@@ -18,15 +20,14 @@
 class MyScene : public QGraphicsScene
 {
 public:
-	MyScene();
 	MyScene(const QSize &size);
+	MyScene(voronoiMap::Voronoi* vmap);
 	~MyScene();
 
 	VoronoiGen voronoiGen;
 	QVector<std::shared_ptr<MyGraphicsEllipseItem>> ellipseItems;
 	QVector<std::shared_ptr<QGraphicsLineItem>> lineItems;
 
-//	voronoiMap::Voronoi* createVmap(); // to be remove
 	/*!
 		\brief creates a blank vmap
 	*/
@@ -48,6 +49,7 @@ public:
 	 * \brief syncFortune
 	 */
 	void syncFortune();
+	void drawTerrain(float max);
 	void setAutoFortune(bool action);
 
 	// QGraphicsScene interface
@@ -61,7 +63,10 @@ protected:
 	void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
 
 private:
+	void initialProgression();
+
 	bool autoFortune = false;
+	QImage terrProg; // terrain color progress
 };
 
 #endif // MYSCENE_H

@@ -27,6 +27,7 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
+    map.cpp \
     mywidget/mygraphicsellipseitem.cpp \
     mywidget/myscene.cpp \
     dialogs/newmap/newmapdialog.cpp \
@@ -38,6 +39,7 @@ SOURCES += \
 
 HEADERS += \
         mainwindow.h \
+    map.h \
     mywidget/mygraphicsellipseitem.h \
     mywidget/myscene.h \
     dialogs/newmap/newmapdialog.h \

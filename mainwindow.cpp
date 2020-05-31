@@ -73,10 +73,9 @@ void MainWindow::on_actionLoad_Json_triggered()
 
 		Voronoi* vmap = Voronoi::fromJson(json_map.toStdString());
 		if(scene == nullptr){
-			scene = new MyScene();
+			scene = new MyScene(vmap);
 			ui->graphicsView->setScene(scene);
 		}
-		scene->setVmap(vmap);
 		ui->graphicsView->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 	}
 	file.close();
@@ -107,4 +106,10 @@ void MainWindow::on_actionRun_Mamemaki_triggered()
 {
 	scene->voronoiGen.mamemaki(Rectangle(0, 0, scene->voronoiGen.vmap->width, scene->voronoiGen.vmap->height), 0.99);
 	scene->syncVmap();
+}
+
+void MainWindow::on_actionRun_Terrain_Gen_triggered()
+{
+	scene->voronoiGen.generateTerrain();
+	scene->drawTerrain(256);
 }

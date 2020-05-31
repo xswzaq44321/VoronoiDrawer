@@ -6,6 +6,12 @@
 #include <exception>
 #include <algorithm>
 #include <set>
+
+#define QT
+#ifdef QT
+#include <QDebug>
+#endif
+
 #include "json.hpp"
 #define PI 3.1415926535
 
@@ -42,9 +48,17 @@ struct Point
 	Point(const PointF* old);
 	Point(const PointF& old);
 	~Point() = default;
+	struct Terrain{
+		float altitude;
+	};
 
 	int x;
 	int y;
+	Terrain terrain;
+
+	std::vector<Polygon*> polygons;
+	std::vector<Edge*> edges;
+	std::vector<Point*> adjacents;
 
 	double distance(const Point& other) const;
 	explicit operator PointF() const;
@@ -84,8 +98,8 @@ public:
 	int parentID[2] = {-1, -1};
 
 	Point* getParentID(const int& index);
-	bool hasParentID(const int id);
-	double Distance(const Point& other) const;
+	bool hasParentID(const int id) const;
+	double distance(const Point& other) const;
 	bool isAbstract() const;
 	void deAbstract();
 
@@ -104,11 +118,13 @@ public:
 	~Polygon();
 
 	std::vector<Edge*> edges;
+	std::vector<Polygon*> adjacents;
+	std::vector<Point*> vertices;
 	Point *focus;
 	int id = -1;
 
-	bool contains(const Point& other); // stump
-	bool contains(const Point& other) const; // stump
+	bool contains(const Point& other);
+	bool contains(const int x, const int y);
 	void organize();
 	bool isComplete();
 private:

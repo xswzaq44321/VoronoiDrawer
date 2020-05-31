@@ -161,12 +161,12 @@ Point* Edge::getParentID(const int &index)
 		throw std::out_of_range("Edge::get: index must be in the range of [0, 1]");
 }
 
-bool Edge::hasParentID(const int id)
+bool Edge::hasParentID(const int id) const
 {
 	return std::find(parentID, parentID + 2, id) != (parentID + 2);
 }
 
-double Edge::Distance(const Point &other) const
+double Edge::distance(const Point &other) const
 {
 	if(b == nullptr || a == nullptr)
 		throw std::invalid_argument("Edge::Distance: either a or b is null");
@@ -237,12 +237,19 @@ bool Polygon::contains(const Point &other)
 {
 	if(!organized)
 		organize();
-	return false;
+	if(!this->isComplete())
+		return false;
+	for (const auto& edge : edges) {
+		if(cross(edge->a, edge->b, other) < 0)
+			return false;
+	}
+	return true;
 }
 
-bool Polygon::contains(const Point &other) const
+bool Polygon::contains(const int x, const int y)
 {
-	return false;
+	Point bar(x, y);
+	return contains(bar);
 }
 
 void Polygon::organize()

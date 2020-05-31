@@ -9,7 +9,7 @@ Map<WIDTH_X, WIDTH_Y, HEIGHT>::Map(const std::string& folderPath):
 }
 
 template<unsigned int WIDTH_X, unsigned int WIDTH_Y, unsigned int HEIGHT>
-Map::~Map()
+Map<WIDTH_X, WIDTH_Y, HEIGHT>::~Map()
 {
 	for (auto it : chunks) {
 		for (auto iit : it->second) {
