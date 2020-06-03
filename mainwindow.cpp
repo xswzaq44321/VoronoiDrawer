@@ -100,22 +100,26 @@ void MainWindow::on_actionRun_Lloyd_triggered()
 {
 	scene->voronoiGen.performLloyd();
 	scene->syncVmap();
+	ui->actionRun_Fortune_Algorithm->setChecked(false);
 }
 
 void MainWindow::on_actionRun_Mamemaki_triggered()
 {
 	scene->voronoiGen.mamemaki(Rectangle(0, 0, scene->voronoiGen.vmap->width, scene->voronoiGen.vmap->height), 0.99);
 	scene->syncVmap();
+	ui->actionRun_Fortune_Algorithm->setChecked(false);
 }
 
 void MainWindow::on_actionRun_Terrain_Gen_triggered()
 {
 	scene->voronoiGen.generateTerrain();
 	scene->drawTerrain(scene->voronoiGen.getMaxAltitude());
+	ui->actionRun_Fortune_Algorithm->setChecked(false);
 }
 
 void MainWindow::on_actionRun_Water_Gen_triggered()
 {
 	scene->voronoiGen.generateWaters();
 	scene->drawWater();
+	ui->actionRun_Fortune_Algorithm->setChecked(false);
 }
