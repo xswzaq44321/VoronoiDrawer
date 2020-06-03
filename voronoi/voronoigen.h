@@ -39,6 +39,9 @@ public:
 	void performFortune();
 	void performLloyd();
 	void generateTerrain();
+	void generateWaters(double range = 1.0);
+
+	int getMaxAltitude();
 
 private:
 	int seed;
@@ -46,6 +49,11 @@ private:
 	int maxAltitude = 256;
 	int mapWidthX = 256;
 	int mapWidthY = 256;
+	std::vector<std::vector<double>> interpolateM = {
+		{0.9,	0.95,	0.9},
+		{0.95,	1.0,	0.95},
+		{0.9,	0.95,	0.9}
+	};
 };
 
 #endif // VORONOIGEN_H

@@ -81,6 +81,8 @@ SweepLine::SweepLine(Voronoi* vmap)
 	this->vmap = vmap;
 	for(int i = 0; i < this->vmap->polygons.size(); ++i){
 		Polygon* bar = this->vmap->polygons[i];
+		bar->edges.clear();
+		bar->unOrganize();
 		bar->id = i;
 		addSite(new Event(bar));
 	}

@@ -45,11 +45,13 @@ struct Point
 	Point(int x, int y);
 	Point(const Point* old);
 	Point(const Point& old);
+	Point(Point&& old);
 	Point(const PointF* old);
 	Point(const PointF& old);
 	~Point() = default;
 	struct Terrain{
-		float altitude;
+		float altitude = 0;
+		std::string type = "";
 	};
 
 	int x;
@@ -63,6 +65,7 @@ struct Point
 	double distance(const Point& other) const;
 	explicit operator PointF() const;
 	bool operator()(const Point& lhs, const Point& rhs);
+	Point& operator=(const Point& rhs);
 };
 
 bool operator<(const Point& lhs, const Point& rhs);
@@ -126,6 +129,7 @@ public:
 	bool contains(const Point& other);
 	bool contains(const int x, const int y);
 	void organize();
+	void unOrganize();
 	bool isComplete();
 private:
 	bool organized;

@@ -5,7 +5,7 @@ using namespace voronoiMap;
 MyScene::MyScene(const QSize& size):
 	QGraphicsScene(0, 0, size.width(), size.height())
 {
-	voronoiGen.setVmap(new Voronoi(size.width(), size.height()));
+	this->setVmap(new Voronoi(size.width(), size.height()));
 	initialProgression();
 }
 
@@ -20,15 +20,21 @@ MyScene::~MyScene()
 	//	qDebug() << typeid(*this).name() << "dtor";
 }
 
-void MyScene::setVmap()
-{
-	voronoiGen.setVmap(new Voronoi(this->width(), this->height()));
-	this->syncVmap();
-}
+//void MyScene::setVmap()
+//{
+//	voronoiGen.setVmap(new Voronoi(this->width(), this->height()));
+//	this->syncVmap();
+//	mapCanvas = new QPixmap(this->width(), this->height());
+//}
 
 void MyScene::setVmap(Voronoi *vmap)
 {
+	mapCanvas = new QPixmap(vmap->width, vmap->height);
+	mapCanvas->fill();
 	voronoiGen.setVmap(vmap);
+	this->setSceneRect(0, 0, vmap->width, vmap->height);
+	mapCanvasItem = this->addPixmap(*mapCanvas);
+	mapCanvasItem->setZValue(-10000);
 	this->syncVmap();
 }
 
@@ -52,8 +58,6 @@ void MyScene::syncVmap(bool updatePoint)
 		this->removeItem(it.get());
 	}
 	lineItems.clear();
-	this->setSceneRect(0, 0, vmap->width, vmap->height);
-	this->addRect(this->sceneRect(), QPen(Qt::white), QBrush(Qt::white))->setZValue(-100);
 	for(const auto& poly:vmap->polygons){
 		if(updatePoint){
 			MyGraphicsEllipseItem *item = new MyGraphicsEllipseItem(poly->focus->x, poly->focus->y, 5, 5);
@@ -79,27 +83,46 @@ void MyScene::syncFortune(){
 	lineItems.push_back(std::shared_ptr<QGraphicsLineItem>(litem));
 }
 
-void MyScene::drawTerrain(float max)
+void MyScene::drawTerrain(float altitudeMax)
 {
-	this->clearContent();
-	QPixmap* canvas = new QPixmap(voronoiGen.vmap->width, voronoiGen.vmap->height);
-	canvas->fill();
-	QPainter painter(canvas);
+	mapCanvas->fill();
+
+	QPainter painter(mapCanvas);
 	const auto& pointMap = voronoiGen.pointMap;
 	for (int x = 0; x < pointMap.size(); ++x) {
 		for (int y = 0; y < pointMap.at(x).size(); ++y) {
 			auto altitude = pointMap.at(x).at(y).terrain.altitude;
-			double gradient = altitude / max;
+			double gradient = altitude / altitudeMax;
 			gradient = std::max(0.0, std::min(1.0, gradient));
-			QColor color = terrProg.pixel(0, gradient * (terrProg.height() - 1));
+			QColor color = terrProg.pixel(0, (1 - gradient) * (terrProg.height() - 1));
 			painter.setPen(color);
 			painter.setBrush(color);
 			painter.drawPoint(x, y);
 		}
 	}
 
-	this->addPixmap(*canvas);
-	this->addPixmap(QPixmap::fromImage(terrProg))->setPos(this->width() - terrProg.width(), this->height() - terrProg.height());
+	this->addPixmap(QPixmap::fromImage(terrProg))
+			->setPos(this->width() - terrProg.width(), this->height() - terrProg.height());
+	this->addRect(0, 0, terrProg.width(), terrProg.height(), QPen(Qt::black), QBrush(Qt::transparent))
+			->setPos(this->width() - terrProg.width(), this->height() - terrProg.height());
+	mapCanvasItem->setPixmap(*mapCanvas);
+}
+
+void MyScene::drawWater()
+{
+	QPainter painter(mapCanvas);
+	const auto& pointMap = voronoiGen.pointMap;
+	for (int x = 0; x < pointMap.size(); ++x) {
+		for (int y = 0; y < pointMap.at(x).size(); ++y) {
+			if(pointMap[x][y].terrain.type == "river" || pointMap[x][y].terrain.type == "water"){
+				QColor color(0, 153, 255);
+				painter.setPen(color);
+				painter.setBrush(color);
+				painter.drawPoint(x, y);
+			}
+		}
+	}
+	mapCanvasItem->setPixmap(*mapCanvas);
 }
 
 void MyScene::setAutoFortune(bool action)
@@ -190,8 +213,10 @@ void MyScene::initialProgression()
 	linear.setColorAt(0, QColor::fromRgb(102, 51, 0));
 	linear.setColorAt(0.5, QColor::fromRgb(255, 255, 51));
 	linear.setColorAt(1, QColor::fromRgb(0, 102, 0));
+
 	painter.setBrush(linear);
 	painter.setPen(Qt::transparent);
 	painter.drawRect(0, 0, canvas->width(), canvas->height());
+
 	terrProg = canvas->toImage();
 }

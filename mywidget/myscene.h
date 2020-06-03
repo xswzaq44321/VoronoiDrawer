@@ -49,7 +49,8 @@ public:
 	 * \brief syncFortune
 	 */
 	void syncFortune();
-	void drawTerrain(float max);
+	void drawTerrain(float altitudeMax);
+	void drawWater();
 	void setAutoFortune(bool action);
 
 	// QGraphicsScene interface
@@ -67,6 +68,8 @@ private:
 
 	bool autoFortune = false;
 	QImage terrProg; // terrain color progress
+	QPixmap* mapCanvas;
+	QGraphicsPixmapItem *mapCanvasItem = nullptr;
 };
 
 #endif // MYSCENE_H

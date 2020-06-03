@@ -42,7 +42,7 @@ void MainWindow::on_actionNew_Map_triggered()
 
 	delete scene;
 	scene = new MyScene(nmd.size);
-	scene->addRect(scene->sceneRect(), QPen(Qt::white), QBrush(Qt::white))->setZValue(-100);
+//	scene->addRect(scene->sceneRect(), QPen(Qt::white), QBrush(Qt::white))->setZValue(-100);
 	ui->graphicsView->setScene(scene);
 	ui->graphicsView->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 }
@@ -111,5 +111,11 @@ void MainWindow::on_actionRun_Mamemaki_triggered()
 void MainWindow::on_actionRun_Terrain_Gen_triggered()
 {
 	scene->voronoiGen.generateTerrain();
-	scene->drawTerrain(256);
+	scene->drawTerrain(scene->voronoiGen.getMaxAltitude());
+}
+
+void MainWindow::on_actionRun_Water_Gen_triggered()
+{
+	scene->voronoiGen.generateWaters();
+	scene->drawWater();
 }

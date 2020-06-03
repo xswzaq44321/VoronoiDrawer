@@ -45,13 +45,22 @@ Point::Point(int x, int y):
 }
 
 Point::Point(const Point *old):
-	x(old->x), y(old->y)
+	x(old->x), y(old->y),
+	terrain(old->terrain)
 {
 }
 
 Point::Point(const Point &old):
-	x(old.x), y(old.y)
+	x(old.x), y(old.y),
+	terrain(old.terrain)
 {
+}
+
+Point::Point(Point &&old):
+	x(old.x), y(old.y),
+	terrain(old.terrain)
+{
+
 }
 
 Point::Point(const PointF *old):
@@ -72,6 +81,13 @@ double Point::distance(const Point &other) const
 bool Point::operator()(const Point &lhs, const Point &rhs)
 {
 	return (lhs.x < rhs.x) || (lhs.x == rhs.x && lhs.y < rhs.y);
+}
+
+Point &Point::operator=(const Point &rhs)
+{
+	this->x = rhs.x;
+	this->y = rhs.y;
+	this->terrain = rhs.terrain;
 }
 
 PointF::PointF()
@@ -287,6 +303,11 @@ void Polygon::organize()
 	}
 	pairsort(edgeDegrees, edgeArr, edges.size());
 	organized = true;
+}
+
+void Polygon::unOrganize()
+{
+	organized = false;
 }
 
 bool Polygon::isComplete()

@@ -41,6 +41,7 @@ private slots:
 	void on_actionRun_Lloyd_triggered();
 	void on_actionRun_Mamemaki_triggered();
 	void on_actionRun_Terrain_Gen_triggered();
+	void on_actionRun_Water_Gen_triggered();
 };
 
 #endif // MAINWINDOW_H

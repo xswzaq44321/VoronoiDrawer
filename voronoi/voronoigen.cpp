@@ -116,6 +116,11 @@ void VoronoiGen::performLloyd()
 
 void VoronoiGen::generateTerrain()
 {
+	for (int x = 0; x < pointMap.size(); ++x) {
+		for (int y = 0; y < pointMap.at(0).size(); ++y) {
+			pointMap[x][y].terrain.altitude = 0;
+		}
+	}
 	for (auto&& it : vmap->polygons) {
 		for (auto&& jt : it->edges) {
 			if(jt->isAbstract() || jt->b == nullptr)
@@ -131,7 +136,17 @@ void VoronoiGen::generateTerrain()
 	for (auto&& poly : vmap->polygons) {
 		if(!poly->isComplete())
 			continue;
+		double sum = 0, avg;
+		int count = 0;
 		int minX, maxX, minY, maxY;
+		for (const auto& edge : poly->edges) {
+			for (Point* Edge::*it : {&Edge::a, &Edge::b}) {
+				sum += (edge->*it)->terrain.altitude;
+				++count;
+			}
+		}
+		avg = sum / count;
+
 		minX = mapWidthX;
 		minY = mapWidthY;
 		maxX = maxY = 0;
@@ -152,20 +167,99 @@ void VoronoiGen::generateTerrain()
 				if(poly->contains(x, y)){
 					double sumBase = 0, sum = 0;
 					for (const auto& edge : poly->edges) {
+						if(edge->a->distance(Point(x, y)) == 0){
+							sum = edge->a->terrain.altitude;
+							sumBase = 1.0;
+							break;
+						}
+						if(edge->b->distance(Point(x, y)) == 0){
+							sum = edge->b->terrain.altitude;
+							sumBase = 1.0;
+							break;
+						}
+						sum += (1.0 / edge->a->distance(Point(x, y))) * edge->a->terrain.altitude;
+						sum += (1.0 / edge->b->distance(Point(x, y))) * edge->b->terrain.altitude;
 						sumBase += 1.0 / edge->a->distance(Point(x, y));
 						sumBase += 1.0 / edge->b->distance(Point(x, y));
 					}
-//					sumBase /= 2.0;
-					for (const auto& edge : poly->edges) {
-						sum += (1.0 / edge->a->distance(Point(x, y))) * edge->a->terrain.altitude;
-						sum += (1.0 / edge->b->distance(Point(x, y))) * edge->b->terrain.altitude;
-					}
-//					sum /= 2.0;
 					pointMap[x][y].terrain.altitude = sum / sumBase;
+					/*pointMap[x][y].terrain.altitude = avg*/;
+				}
+			}
+		}
+		poly->focus->terrain.altitude = avg;
+	}
+	vector< vector< voronoiMap::Point > > tempMap;
+	for (int iteration = 0; iteration < 20; ++iteration) {
+		tempMap = pointMap;
+		for (int x = 0; x < tempMap.size(); ++x) {
+			for (int y = 0; y < tempMap.at(x).size(); ++y) {
+				double sum = 0, sumBase = 0;
+				for (int i = 0; i < interpolateM.size(); ++i) {
+					int ii = x + (i - interpolateM.size() / 2);
+					if(ii < 0 || ii >= pointMap.size())
+						continue;
+					for (int j = 0; j < interpolateM.at(i).size(); ++j) {
+						int jj = y + (j - interpolateM.size() / 2);
+						if(jj < 0 || jj >= pointMap.at(0).size())
+							continue;
+						sum += pointMap[ii][jj].terrain.altitude * interpolateM[i][j];
+						sumBase += interpolateM[i][j];
+					}
+				}
+				tempMap[x][y].terrain.altitude = sum / sumBase;
+			}
+		}
+		pointMap = tempMap;
+	}
+}
+
+void VoronoiGen::generateWaters(double range)
+{
+	for (int x = 0; x < pointMap.size(); ++x) {
+		for (int y = 0; y < pointMap.at(0).size(); ++y) {
+			pointMap[x][y].terrain.type = "";
+		}
+	}
+	for (auto&& poly : vmap->polygons) {
+		for (const auto& edge : poly->edges) {
+			if(edge->a->terrain.altitude > poly->focus->terrain.altitude
+				|| edge->b->terrain.altitude > poly->focus->terrain.altitude)
+				continue;
+/*			if(edge->a->terrain.altitude > vmap->polygons[edge->parentID[0]]->focus->terrain.altitude
+				|| edge->b->terrain.altitude > vmap->polygons[edge->parentID[0]]->focus->terrain.altitude)
+				continue;
+			if(edge->a->terrain.altitude > vmap->polygons[edge->parentID[1]]->focus->terrain.altitude
+				|| edge->b->terrain.altitude > vmap->polygons[edge->parentID[1]]->focus->terrain.altitude)
+				continue;*/
+			int minX, maxX, minY, maxY;
+			minX = mapWidthX;
+			minY = mapWidthY;
+			maxX = maxY = 0;
+			for (Point* Edge::*it : {&Edge::a, &Edge::b}) {
+				if(minX > (edge->*it)->x)	minX = (edge->*it)->x;
+				if(minY > (edge->*it)->y)	minY = (edge->*it)->y;
+				if(maxX < (edge->*it)->x)	maxX = (edge->*it)->x;
+				if(maxY < (edge->*it)->y)	maxY = (edge->*it)->y;
+			}
+			maxX = std::min(maxX + 1, mapWidthX);
+			maxY = std::min(maxY + 1, mapWidthY);
+			minX = std::max(minX - 1, 0);
+			minY = std::max(minY - 1, 0);
+			for (int x = minX; x < maxX; ++x) {
+				for (int y = minY; y < maxY; ++y) {
+					if(edge->distance(Point(x, y)) < range){
+						pointMap[x][y].terrain.type = "river";
+					}
 				}
 			}
 		}
 	}
+}
+
+int VoronoiGen::getMaxAltitude()
+{
+	return maxAltitude;
 }
 
 void VoronoiGen::mamemaki(const Rectangle&& range, double threshold)
