@@ -5,11 +5,11 @@ using namespace std;
 
 VoronoiGen::VoronoiGen():
 	VoronoiGen(nullptr)
-{
-}
+{}
 
 VoronoiGen::VoronoiGen(Voronoi *vmap):
-	vmap(vmap)
+	vmap(vmap),
+	smooth(this)
 {
 	random_device rd;
 	default_random_engine gen = std::default_random_engine(rd());
@@ -24,6 +24,8 @@ VoronoiGen::VoronoiGen(Voronoi *vmap):
 		mapWidthX = vmap->width;
 		mapWidthY = vmap->height;
 	}
+
+	loadScript("mods");
 }
 
 VoronoiGen::~VoronoiGen()
@@ -32,6 +34,18 @@ VoronoiGen::~VoronoiGen()
 	delete sweepLine;
 	delete mamemakiNoise;
 	delete perlinNoise;
+}
+
+void VoronoiGen::loadScript(string path)
+{
+	// terrain parameters
+	lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math);
+	lua.script_file("mods/terrain.lua");
+	maxAltitude = (int)lua["MaxAltitude"];
+	mapWidthX = (int)lua["MapWidthX"];
+	mapWidthY = (int)lua["MapWidthY"];
+	mamemakiOffset = (int)lua["MamemakiOffset"];
+	smooth.loadScript();
 }
 
 void VoronoiGen::setVmap(voronoiMap::Voronoi *vmap)
@@ -79,9 +93,9 @@ void VoronoiGen::performFortune()
 	}
 	while(sweepLine->nextEvent() != sweepLine->LMAXVALUE);
 	sweepLine->finishEdges();
-//	for(Polygon* poly : vmap->polygons){
-//		poly->organize();
-//	}
+	//	for(Polygon* poly : vmap->polygons){
+	//		poly->organize();
+	//	}
 	delete sweepLine;
 	sweepLine = nullptr;
 }
@@ -189,28 +203,9 @@ void VoronoiGen::generateTerrain()
 		}
 		poly->focus->terrain.altitude = avg;
 	}
-	vector< vector< voronoiMap::Point > > tempMap;
-	for (int iteration = 0; iteration < 20; ++iteration) {
-		tempMap = pointMap;
-		for (int x = 0; x < tempMap.size(); ++x) {
-			for (int y = 0; y < tempMap.at(x).size(); ++y) {
-				double sum = 0, sumBase = 0;
-				for (int i = 0; i < interpolateM.size(); ++i) {
-					int ii = x + (i - interpolateM.size() / 2);
-					if(ii < 0 || ii >= pointMap.size())
-						continue;
-					for (int j = 0; j < interpolateM.at(i).size(); ++j) {
-						int jj = y + (j - interpolateM.size() / 2);
-						if(jj < 0 || jj >= pointMap.at(0).size())
-							continue;
-						sum += pointMap[ii][jj].terrain.altitude * interpolateM[i][j];
-						sumBase += interpolateM[i][j];
-					}
-				}
-				tempMap[x][y].terrain.altitude = sum / sumBase;
-			}
-		}
-		pointMap = tempMap;
+	int iteration = lua.get<int>(lua["Smooth"]["Iteration"]);
+	for (int i = 0; i < iteration; ++i) {
+		smooth.interpolateMethod();
 	}
 }
 
@@ -224,9 +219,9 @@ void VoronoiGen::generateWaters(double range)
 	for (auto&& poly : vmap->polygons) {
 		for (const auto& edge : poly->edges) {
 			if(edge->a->terrain.altitude > poly->focus->terrain.altitude
-				|| edge->b->terrain.altitude > poly->focus->terrain.altitude)
+					|| edge->b->terrain.altitude > poly->focus->terrain.altitude)
 				continue;
-/*			if(edge->a->terrain.altitude > vmap->polygons[edge->parentID[0]]->focus->terrain.altitude
+			/*			if(edge->a->terrain.altitude > vmap->polygons[edge->parentID[0]]->focus->terrain.altitude
 				|| edge->b->terrain.altitude > vmap->polygons[edge->parentID[0]]->focus->terrain.altitude)
 				continue;
 			if(edge->a->terrain.altitude > vmap->polygons[edge->parentID[1]]->focus->terrain.altitude
@@ -280,4 +275,44 @@ void VoronoiGen::mamemaki(const Rectangle&& range, double threshold)
 int VoronoiGen::getSeed() const
 {
 	return seed;
+}
+
+VoronoiGen::Smooth::Smooth(VoronoiGen *parent):
+	parent(parent)
+{
+}
+
+void VoronoiGen::Smooth::loadScript()
+{
+	sol::table t = parent->lua["Smooth"]["InterpolateMatrix"];
+	for (int i = 0; i < t.size(); ++i) {
+		interpolateM.push_back(std::vector<double>());
+		for (int j = 0; j < ((sol::table)t[i + 1]).size(); ++j) {
+			interpolateM[i].push_back((double)t[i + 1][j + 1]);
+		}
+	}
+}
+
+void VoronoiGen::Smooth::interpolateMethod()
+{
+	vector< vector< voronoiMap::Point > > tempMap = parent->pointMap;
+	for (int x = 0; x < tempMap.size(); ++x) {
+		for (int y = 0; y < tempMap.at(x).size(); ++y) {
+			double sum = 0, sumBase = 0;
+			for (int i = 0; i < interpolateM.size(); ++i) {
+				int ii = x + (i - interpolateM.size() / 2);
+				if(ii < 0 || ii >= parent->pointMap.size())
+					continue;
+				for (int j = 0; j < interpolateM.at(i).size(); ++j) {
+					int jj = y + (j - interpolateM.size() / 2);
+					if(jj < 0 || jj >= parent->pointMap.at(0).size())
+						continue;
+					sum += parent->pointMap[ii][jj].terrain.altitude * interpolateM[i][j];
+					sumBase += interpolateM[i][j];
+				}
+			}
+			tempMap[x][y].terrain.altitude = sum / sumBase;
+		}
+	}
+	parent->pointMap = tempMap;
 }

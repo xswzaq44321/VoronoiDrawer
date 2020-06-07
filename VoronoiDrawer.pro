@@ -22,9 +22,42 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-CONFIG += c++11
+CONFIG += c++17
 
 SOURCES += \
+    dependencies/src/lapi.c \
+    dependencies/src/lauxlib.c \
+    dependencies/src/lbaselib.c \
+    dependencies/src/lbitlib.c \
+    dependencies/src/lcode.c \
+    dependencies/src/lcorolib.c \
+    dependencies/src/lctype.c \
+    dependencies/src/ldblib.c \
+    dependencies/src/ldebug.c \
+    dependencies/src/ldo.c \
+    dependencies/src/ldump.c \
+    dependencies/src/lfunc.c \
+    dependencies/src/lgc.c \
+    dependencies/src/linit.c \
+    dependencies/src/liolib.c \
+    dependencies/src/llex.c \
+    dependencies/src/lmathlib.c \
+    dependencies/src/lmem.c \
+    dependencies/src/loadlib.c \
+    dependencies/src/lobject.c \
+    dependencies/src/lopcodes.c \
+    dependencies/src/loslib.c \
+    dependencies/src/lparser.c \
+    dependencies/src/lstate.c \
+    dependencies/src/lstring.c \
+    dependencies/src/lstrlib.c \
+    dependencies/src/ltable.c \
+    dependencies/src/ltablib.c \
+    dependencies/src/ltm.c \
+    dependencies/src/lundump.c \
+    dependencies/src/lutf8lib.c \
+    dependencies/src/lvm.c \
+    dependencies/src/lzio.c \
         main.cpp \
         mainwindow.cpp \
     map.cpp \
@@ -38,6 +71,33 @@ SOURCES += \
     bst.cpp
 
 HEADERS += \
+    dependencies/sol.hpp \
+    dependencies/src/lapi.h \
+    dependencies/src/lauxlib.h \
+    dependencies/src/lcode.h \
+    dependencies/src/lctype.h \
+    dependencies/src/ldebug.h \
+    dependencies/src/ldo.h \
+    dependencies/src/lfunc.h \
+    dependencies/src/lgc.h \
+    dependencies/src/llex.h \
+    dependencies/src/llimits.h \
+    dependencies/src/lmem.h \
+    dependencies/src/lobject.h \
+    dependencies/src/lopcodes.h \
+    dependencies/src/lparser.h \
+    dependencies/src/lprefix.h \
+    dependencies/src/lstate.h \
+    dependencies/src/lstring.h \
+    dependencies/src/ltable.h \
+    dependencies/src/ltm.h \
+    dependencies/src/lua.h \
+    dependencies/src/lua.hpp \
+    dependencies/src/luaconf.h \
+    dependencies/src/lualib.h \
+    dependencies/src/lundump.h \
+    dependencies/src/lvm.h \
+    dependencies/src/lzio.h \
         mainwindow.h \
     map.h \
     mywidget/mygraphicsellipseitem.h \
@@ -49,6 +109,9 @@ HEADERS += \
     voronoi/voronoimap.h \
     voronoi/sweepline.h \
     bst.h
+
+INCLUDEPATH += \
+    dependencies/src
 
 FORMS += \
         mainwindow.ui \

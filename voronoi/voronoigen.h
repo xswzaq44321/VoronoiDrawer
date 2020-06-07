@@ -7,11 +7,15 @@
 #include <random>
 #include <climits>
 
+#define QT
+#ifdef QT
 #include <QDebug>
+#endif
 
 #include "voronoimap.h"
 #include "sweepline.h"
 #include "FastNoise.h"
+#include "dependencies/sol.hpp"
 
 class VoronoiGen
 {
@@ -26,6 +30,12 @@ public:
 	FastNoise *perlinNoise;
 	std::vector<std::vector<voronoiMap::Point>> pointMap;
 
+	/*!
+	 * \brief loadScript
+	 * \param path
+	 * \throws std::runtime_error
+	 */
+	void loadScript(std::string path);
 	void setVmap(voronoiMap::Voronoi *vmap);
 	void clearVmap();
 	/*!
@@ -43,17 +53,24 @@ public:
 
 	int getMaxAltitude();
 
+	class Smooth{
+	public:
+		Smooth(VoronoiGen *parent);
+		void loadScript();
+		void interpolateMethod();
+		std::vector<std::vector<double>> interpolateM;
+	private:
+		VoronoiGen *parent;
+	}smooth;
+	friend class Smooth;
+
 private:
+	sol::state lua;
 	int seed;
-	int mamemakiOffset = 100;
-	int maxAltitude = 256;
-	int mapWidthX = 256;
-	int mapWidthY = 256;
-	std::vector<std::vector<double>> interpolateM = {
-		{0.9,	0.95,	0.9},
-		{0.95,	1.0,	0.95},
-		{0.9,	0.95,	0.9}
-	};
+	int mamemakiOffset;
+	int maxAltitude;
+	int mapWidthX;
+	int mapWidthY;
 };
 
 #endif // VORONOIGEN_H

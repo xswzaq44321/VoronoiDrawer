@@ -52,7 +52,7 @@ void MainWindow::on_actionSave_Json_triggered()
 	if(scene != nullptr && scene->voronoiGen.vmap != nullptr){
 		QString json_map = scene->voronoiGen.vmap->toJson(4).c_str();
 		qDebug() << json_map;
-		QString filename = QFileDialog::getSaveFileName(this, "save json", "/", "voronoi map(*.json)");
+		QString filename = QFileDialog::getSaveFileName(this, "save json", ".", "voronoi map(*.json)");
 		QFile file(filename);
 		if(file.open(QIODevice::WriteOnly | QIODevice::Truncate)){
 			QTextStream stream(&file);
@@ -65,7 +65,7 @@ void MainWindow::on_actionSave_Json_triggered()
 void MainWindow::on_actionLoad_Json_triggered()
 {
 	QString json_map;
-	QString filename = QFileDialog::getOpenFileName(this, "load json", "/", "voronoi map(*.json)");
+	QString filename = QFileDialog::getOpenFileName(this, "load json", ".", "voronoi map(*.json)");
 	QFile file(filename);
 	if(file.open(QIODevice::ReadOnly)){
 		QTextStream stream(&file);
