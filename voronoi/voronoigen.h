@@ -5,6 +5,7 @@
 #include <numeric>
 #include <algorithm>
 #include <random>
+#include <functional>
 #include <climits>
 
 #define QT
@@ -35,7 +36,7 @@ public:
 	 * \param path
 	 * \throws std::runtime_error
 	 */
-	void loadScript(std::string path);
+	void loadScript(std::string path = "mods");
 	void setVmap(voronoiMap::Voronoi *vmap);
 	void clearVmap();
 	/*!
@@ -50,19 +51,30 @@ public:
 	void performLloyd();
 	void generateTerrain();
 	void generateWaters(double range = 1.0);
+	void generateBiomes();
 
 	int getMaxAltitude();
 
 	class Smooth{
 	public:
 		Smooth(VoronoiGen *parent);
-		void loadScript();
+		void loadScript(std::string path);
 		void interpolateMethod();
 		std::vector<std::vector<double>> interpolateM;
 	private:
 		VoronoiGen *parent;
+		std::function<sol::table(sol::table)> scriptMethod = {};
 	}smooth;
 	friend class Smooth;
+	class Biomes{
+	public:
+		Biomes(VoronoiGen *parent);
+		void loadScript(std::string path);
+		std::function<sol::table(sol::table)> setBiome;
+	private:
+		VoronoiGen *parent;
+	}biomes;
+	friend class Biomes;
 
 private:
 	sol::state lua;

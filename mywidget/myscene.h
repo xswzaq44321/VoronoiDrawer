@@ -27,6 +27,7 @@ public:
 	VoronoiGen voronoiGen;
 	QVector<std::shared_ptr<MyGraphicsEllipseItem>> ellipseItems;
 	QVector<std::shared_ptr<QGraphicsLineItem>> lineItems;
+	QVector<std::shared_ptr<QGraphicsItem>> assistantItems;
 
 	/*!
 		\brief creates a blank vmap
@@ -51,6 +52,7 @@ public:
 	void syncFortune();
 	void drawTerrain(float altitudeMax);
 	void drawWater();
+	void drawBiome();
 	void setAutoFortune(bool action);
 
 	// QGraphicsScene interface

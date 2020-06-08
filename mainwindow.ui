@@ -57,6 +57,7 @@
     </property>
     <addaction name="actionClear_Map"/>
     <addaction name="actionNew_Map"/>
+    <addaction name="actionReload_Script"/>
    </widget>
    <widget class="QMenu" name="menuShow">
     <property name="title">
@@ -72,6 +73,7 @@
     <addaction name="separator"/>
     <addaction name="actionRun_Terrain_Gen"/>
     <addaction name="actionRun_Water_Gen"/>
+    <addaction name="actionRun_Biome_Gen"/>
    </widget>
    <widget class="QMenu" name="menuSetting">
     <property name="title">
@@ -151,6 +153,16 @@
   <action name="actionRun_Water_Gen">
    <property name="text">
     <string>Run Water Gen</string>
+   </property>
+  </action>
+  <action name="actionRun_Biome_Gen">
+   <property name="text">
+    <string>Run Biome Gen</string>
+   </property>
+  </action>
+  <action name="actionReload_Script">
+   <property name="text">
+    <string>Reload Script</string>
    </property>
   </action>
  </widget>

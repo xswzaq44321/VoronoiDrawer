@@ -17,7 +17,6 @@ MyScene::MyScene(Voronoi *vmap)
 
 MyScene::~MyScene()
 {
-	//	qDebug() << typeid(*this).name() << "dtor";
 }
 
 //void MyScene::setVmap()
@@ -91,7 +90,7 @@ void MyScene::drawTerrain(float altitudeMax)
 	const auto& pointMap = voronoiGen.pointMap;
 	for (int x = 0; x < pointMap.size(); ++x) {
 		for (int y = 0; y < pointMap.at(x).size(); ++y) {
-			auto altitude = pointMap.at(x).at(y).terrain.altitude;
+			auto altitude = pointMap.at(x).at(y).terrain.height;
 			double gradient = altitude / altitudeMax;
 			gradient = std::max(0.0, std::min(1.0, gradient));
 			QColor color = terrProg.pixel(0, (1 - gradient) * (terrProg.height() - 1));
@@ -101,10 +100,12 @@ void MyScene::drawTerrain(float altitudeMax)
 		}
 	}
 
-	this->addPixmap(QPixmap::fromImage(terrProg))
-			->setPos(this->width() - terrProg.width(), this->height() - terrProg.height());
-	this->addRect(0, 0, terrProg.width(), terrProg.height(), QPen(Qt::black), QBrush(Qt::transparent))
-			->setPos(this->width() - terrProg.width(), this->height() - terrProg.height());
+	QGraphicsItem* bar = this->addPixmap(QPixmap::fromImage(terrProg));
+	bar->setPos(this->width() - terrProg.width(), this->height() - terrProg.height());
+	assistantItems.push_back(std::shared_ptr<QGraphicsItem>(bar));
+	bar = this->addRect(0, 0, terrProg.width(), terrProg.height(), QPen(Qt::black), QBrush(Qt::transparent));
+	bar->setPos(this->width() - terrProg.width(), this->height() - terrProg.height());
+	assistantItems.push_back(std::shared_ptr<QGraphicsItem>(bar));
 	mapCanvasItem->setPixmap(*mapCanvas);
 }
 
@@ -122,6 +123,33 @@ void MyScene::drawWater()
 			}
 		}
 	}
+	mapCanvasItem->setPixmap(*mapCanvas);
+}
+
+void MyScene::drawBiome()
+{
+	for (const auto& it : assistantItems) {
+		this->removeItem(it.get());
+	}
+	assistantItems.clear();
+	mapCanvas->fill();
+
+	QPainter painter(mapCanvas);
+	const auto& pointMap = voronoiGen.pointMap;
+	for (int x = 0; x < pointMap.size(); ++x) {
+		for (int y = 0; y < pointMap.at(x).size(); ++y) {
+			const unsigned char *rgb = pointMap.at(x).at(y).terrain.color;
+			QColor color(rgb[0], rgb[1], rgb[2]);
+			painter.setPen(color);
+			painter.setBrush(color);
+			painter.drawPoint(x, y);
+		}
+	}
+
+	this->addPixmap(QPixmap::fromImage(terrProg))
+			->setPos(this->width() - terrProg.width(), this->height() - terrProg.height());
+	this->addRect(0, 0, terrProg.width(), terrProg.height(), QPen(Qt::black), QBrush(Qt::transparent))
+			->setPos(this->width() - terrProg.width(), this->height() - terrProg.height());
 	mapCanvasItem->setPixmap(*mapCanvas);
 }
 

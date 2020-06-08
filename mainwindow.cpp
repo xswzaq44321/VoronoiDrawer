@@ -51,7 +51,6 @@ void MainWindow::on_actionSave_Json_triggered()
 {
 	if(scene != nullptr && scene->voronoiGen.vmap != nullptr){
 		QString json_map = scene->voronoiGen.vmap->toJson(4).c_str();
-		qDebug() << json_map;
 		QString filename = QFileDialog::getSaveFileName(this, "save json", ".", "voronoi map(*.json)");
 		QFile file(filename);
 		if(file.open(QIODevice::WriteOnly | QIODevice::Truncate)){
@@ -122,4 +121,16 @@ void MainWindow::on_actionRun_Water_Gen_triggered()
 	scene->voronoiGen.generateWaters();
 	scene->drawWater();
 	ui->actionRun_Fortune_Algorithm->setChecked(false);
+}
+
+void MainWindow::on_actionRun_Biome_Gen_triggered()
+{
+	scene->voronoiGen.generateBiomes();
+	scene->drawBiome();
+	ui->actionRun_Fortune_Algorithm->setCheckable(false);
+}
+
+void MainWindow::on_actionReload_Script_triggered()
+{
+	scene->voronoiGen.loadScript();
 }

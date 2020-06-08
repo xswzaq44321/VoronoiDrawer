@@ -50,8 +50,12 @@ struct Point
 	Point(const PointF& old);
 	~Point() = default;
 	struct Terrain{
-		float altitude = 0;
+		Terrain() = default;
+		Terrain(const Terrain& rhs);
+		float height = 0;
+		float humidity = 0;
 		std::string type = "";
+		unsigned char color[3] = {};
 	};
 
 	int x;

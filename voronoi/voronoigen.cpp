@@ -9,7 +9,8 @@ VoronoiGen::VoronoiGen():
 
 VoronoiGen::VoronoiGen(Voronoi *vmap):
 	vmap(vmap),
-	smooth(this)
+	smooth(this),
+	biomes(this)
 {
 	random_device rd;
 	default_random_engine gen = std::default_random_engine(rd());
@@ -25,7 +26,9 @@ VoronoiGen::VoronoiGen(Voronoi *vmap):
 		mapWidthY = vmap->height;
 	}
 
-	loadScript("mods");
+	lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math);
+	loadScript();
+	loadScript();
 }
 
 VoronoiGen::~VoronoiGen()
@@ -39,13 +42,13 @@ VoronoiGen::~VoronoiGen()
 void VoronoiGen::loadScript(string path)
 {
 	// terrain parameters
-	lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math);
-	lua.script_file("mods/terrain.lua");
+	lua.script_file(path + "/terrain.lua");
 	maxAltitude = (int)lua["MaxAltitude"];
 	mapWidthX = (int)lua["MapWidthX"];
 	mapWidthY = (int)lua["MapWidthY"];
 	mamemakiOffset = (int)lua["MamemakiOffset"];
-	smooth.loadScript();
+	smooth.loadScript(path);
+	biomes.loadScript(path);
 }
 
 void VoronoiGen::setVmap(voronoiMap::Voronoi *vmap)
@@ -132,7 +135,7 @@ void VoronoiGen::generateTerrain()
 {
 	for (int x = 0; x < pointMap.size(); ++x) {
 		for (int y = 0; y < pointMap.at(0).size(); ++y) {
-			pointMap[x][y].terrain.altitude = 0;
+			pointMap[x][y].terrain.height = 0;
 		}
 	}
 	for (auto&& it : vmap->polygons) {
@@ -140,9 +143,9 @@ void VoronoiGen::generateTerrain()
 			if(jt->isAbstract() || jt->b == nullptr)
 				continue;
 			Point *a = jt->a;
-			a->terrain.altitude = (perlinNoise->GetNoise(a->x, a->y) + 1) / 2.0 * maxAltitude;
+			a->terrain.height = (perlinNoise->GetNoise(a->x, a->y) + 1) / 2.0 * maxAltitude;
 			Point *b = jt->b;
-			b->terrain.altitude = (perlinNoise->GetNoise(b->x, b->y) + 1) / 2.0 * maxAltitude;
+			b->terrain.height = (perlinNoise->GetNoise(b->x, b->y) + 1) / 2.0 * maxAltitude;
 		}
 	}
 
@@ -152,15 +155,15 @@ void VoronoiGen::generateTerrain()
 			continue;
 		double sum = 0, avg;
 		int count = 0;
-		int minX, maxX, minY, maxY;
 		for (const auto& edge : poly->edges) {
 			for (Point* Edge::*it : {&Edge::a, &Edge::b}) {
-				sum += (edge->*it)->terrain.altitude;
+				sum += (edge->*it)->terrain.height;
 				++count;
 			}
 		}
 		avg = sum / count;
 
+		int minX, maxX, minY, maxY;
 		minX = mapWidthX;
 		minY = mapWidthY;
 		maxX = maxY = 0;
@@ -182,28 +185,28 @@ void VoronoiGen::generateTerrain()
 					double sumBase = 0, sum = 0;
 					for (const auto& edge : poly->edges) {
 						if(edge->a->distance(Point(x, y)) == 0){
-							sum = edge->a->terrain.altitude;
+							sum = edge->a->terrain.height;
 							sumBase = 1.0;
 							break;
 						}
 						if(edge->b->distance(Point(x, y)) == 0){
-							sum = edge->b->terrain.altitude;
+							sum = edge->b->terrain.height;
 							sumBase = 1.0;
 							break;
 						}
-						sum += (1.0 / edge->a->distance(Point(x, y))) * edge->a->terrain.altitude;
-						sum += (1.0 / edge->b->distance(Point(x, y))) * edge->b->terrain.altitude;
+						sum += (1.0 / edge->a->distance(Point(x, y))) * edge->a->terrain.height;
+						sum += (1.0 / edge->b->distance(Point(x, y))) * edge->b->terrain.height;
 						sumBase += 1.0 / edge->a->distance(Point(x, y));
 						sumBase += 1.0 / edge->b->distance(Point(x, y));
 					}
-					pointMap[x][y].terrain.altitude = sum / sumBase;
+					pointMap[x][y].terrain.height = sum / sumBase;
 					/*pointMap[x][y].terrain.altitude = avg*/;
 				}
 			}
 		}
-		poly->focus->terrain.altitude = avg;
+		poly->focus->terrain.height = avg;
 	}
-	int iteration = lua.get<int>(lua["Smooth"]["Iteration"]);
+	int iteration = (int)lua["Smooth"]["Iteration"];
 	for (int i = 0; i < iteration; ++i) {
 		smooth.interpolateMethod();
 	}
@@ -218,8 +221,8 @@ void VoronoiGen::generateWaters(double range)
 	}
 	for (auto&& poly : vmap->polygons) {
 		for (const auto& edge : poly->edges) {
-			if(edge->a->terrain.altitude > poly->focus->terrain.altitude
-					|| edge->b->terrain.altitude > poly->focus->terrain.altitude)
+			if(edge->a->terrain.height > poly->focus->terrain.height
+					|| edge->b->terrain.height > poly->focus->terrain.height)
 				continue;
 			/*			if(edge->a->terrain.altitude > vmap->polygons[edge->parentID[0]]->focus->terrain.altitude
 				|| edge->b->terrain.altitude > vmap->polygons[edge->parentID[0]]->focus->terrain.altitude)
@@ -246,6 +249,45 @@ void VoronoiGen::generateWaters(double range)
 					if(edge->distance(Point(x, y)) < range){
 						pointMap[x][y].terrain.type = "river";
 					}
+				}
+			}
+		}
+	}
+}
+
+void VoronoiGen::generateBiomes()
+{
+	for (auto&& it : vmap->polygons) {
+		sol::table t = lua.create_table();
+		t["moisture"] = 0.5;
+		t["height"] = (float)it->focus->terrain.height / maxAltitude;
+		sol::table bio = biomes.setBiome(t);
+		it->focus->terrain.type = bio["Type"];
+		for (int i = 0; i < 3; ++i) {
+			it->focus->terrain.color[i] = (unsigned char)bio["Color"][i + 1];
+		}
+	}
+	for (auto&& poly : vmap->polygons) {
+		int minX, maxX, minY, maxY;
+		minX = mapWidthX;
+		minY = mapWidthY;
+		maxX = maxY = 0;
+		for (const auto& edge : poly->edges) {
+			for (Point* Edge::*it : {&Edge::a, &Edge::b}) {
+				if(minX > (edge->*it)->x)	minX = (edge->*it)->x;
+				if(minY > (edge->*it)->y)	minY = (edge->*it)->y;
+				if(maxX < (edge->*it)->x)	maxX = (edge->*it)->x;
+				if(maxY < (edge->*it)->y)	maxY = (edge->*it)->y;
+			}
+		}
+		maxX = std::min(maxX, mapWidthX);
+		maxY = std::min(maxY, mapWidthY);
+		minX = std::max(minX, 0);
+		minY = std::max(minY, 0);
+		for (int x = minX; x < maxX; ++x) {
+			for (int y = minY; y < maxY; ++y) {
+				if(poly->contains(x, y)){
+					pointMap[x][y].terrain = poly->focus->terrain;
 				}
 			}
 		}
@@ -282,8 +324,9 @@ VoronoiGen::Smooth::Smooth(VoronoiGen *parent):
 {
 }
 
-void VoronoiGen::Smooth::loadScript()
+void VoronoiGen::Smooth::loadScript(string path)
 {
+	interpolateM.clear();
 	sol::table t = parent->lua["Smooth"]["InterpolateMatrix"];
 	for (int i = 0; i < t.size(); ++i) {
 		interpolateM.push_back(std::vector<double>());
@@ -291,28 +334,59 @@ void VoronoiGen::Smooth::loadScript()
 			interpolateM[i].push_back((double)t[i + 1][j + 1]);
 		}
 	}
+	auto func = parent->lua["Smooth"]["Method"];
+	if(func.valid()){
+		scriptMethod = (sol::function)func;
+	}
 }
 
 void VoronoiGen::Smooth::interpolateMethod()
 {
-	vector< vector< voronoiMap::Point > > tempMap = parent->pointMap;
-	for (int x = 0; x < tempMap.size(); ++x) {
-		for (int y = 0; y < tempMap.at(x).size(); ++y) {
-			double sum = 0, sumBase = 0;
-			for (int i = 0; i < interpolateM.size(); ++i) {
-				int ii = x + (i - interpolateM.size() / 2);
-				if(ii < 0 || ii >= parent->pointMap.size())
-					continue;
-				for (int j = 0; j < interpolateM.at(i).size(); ++j) {
-					int jj = y + (j - interpolateM.size() / 2);
-					if(jj < 0 || jj >= parent->pointMap.at(0).size())
-						continue;
-					sum += parent->pointMap[ii][jj].terrain.altitude * interpolateM[i][j];
-					sumBase += interpolateM[i][j];
-				}
+	if(scriptMethod){
+		sol::table t = parent->lua.create_table();
+		for (int i = 0; i < parent->pointMap.size(); ++i) {
+			t[i + 1] = parent->lua.create_table();
+			for (int j = 0; j < parent->pointMap.at(i).size(); ++j) {
+				t[i + 1][j + 1] = parent->pointMap.at(i).at(j).terrain;
 			}
-			tempMap[x][y].terrain.altitude = sum / sumBase;
 		}
+		t = scriptMethod(t);
+		for (int i = 0; i < parent->pointMap.size(); ++i) {
+			for (int j = 0; j < parent->pointMap.at(i).size(); ++j) {
+				parent->pointMap[i][j].terrain = t[i + 1][j + 1];
+			}
+		}
+	}else{
+		vector< vector< voronoiMap::Point > > tempMap = parent->pointMap;
+		for (int x = 0; x < tempMap.size(); ++x) {
+			for (int y = 0; y < tempMap.at(x).size(); ++y) {
+				double sum = 0, sumBase = 0;
+				for (int i = 0; i < interpolateM.size(); ++i) {
+					int ii = x + (i - interpolateM.size() / 2);
+					if(ii < 0 || ii >= parent->pointMap.size())
+						continue;
+					for (int j = 0; j < interpolateM.at(i).size(); ++j) {
+						int jj = y + (j - interpolateM.size() / 2);
+						if(jj < 0 || jj >= parent->pointMap.at(0).size())
+							continue;
+						sum += parent->pointMap[ii][jj].terrain.height * interpolateM[i][j];
+						sumBase += interpolateM[i][j];
+					}
+				}
+				tempMap[x][y].terrain.height = sum / sumBase;
+			}
+		}
+		parent->pointMap = tempMap;
 	}
-	parent->pointMap = tempMap;
+}
+
+VoronoiGen::Biomes::Biomes(VoronoiGen *parent):
+	parent(parent)
+{
+}
+
+void VoronoiGen::Biomes::loadScript(string path)
+{
+	parent->lua.script_file(path + "/biome.lua");
+	setBiome = parent->lua["setBiome"];
 }

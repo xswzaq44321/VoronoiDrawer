@@ -527,3 +527,13 @@ bool voronoiMap::operator<(const Point &lhs, const Point &rhs)
 {
 	return (lhs.x < rhs.x) || (lhs.x == rhs.x && lhs.y < rhs.y);
 }
+
+Point::Terrain::Terrain(const Point::Terrain &rhs):
+	height(rhs.height),
+	humidity(rhs.humidity),
+	type(rhs.type)
+{
+	for (int i = 0; i < 3; ++i) {
+		this->color[i] = rhs.color[i];
+	}
+}
