@@ -55,17 +55,18 @@ public:
 
 	int getMaxAltitude();
 
+	friend class Smooth;
 	class Smooth{
 	public:
 		Smooth(VoronoiGen *parent);
 		void loadScript(std::string path);
-		void interpolateMethod();
+		void interpolateMethod(int iteration);
 		std::vector<std::vector<double>> interpolateM;
 	private:
 		VoronoiGen *parent;
 		std::function<sol::table(sol::table)> scriptMethod = {};
 	}smooth;
-	friend class Smooth;
+	friend class Biomes;
 	class Biomes{
 	public:
 		Biomes(VoronoiGen *parent);
@@ -74,7 +75,6 @@ public:
 	private:
 		VoronoiGen *parent;
 	}biomes;
-	friend class Biomes;
 
 private:
 	sol::state lua;
@@ -83,6 +83,9 @@ private:
 	int maxAltitude;
 	int mapWidthX;
 	int mapWidthY;
+	std::function<sol::table(sol::table, sol::table)> terrainScriptMethod;
+
+	int mapOffset[2];
 };
 
 #endif // VORONOIGEN_H
