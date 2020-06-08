@@ -17,7 +17,11 @@ VoronoiGen::VoronoiGen(Voronoi *vmap):
 	uniform_int_distribution<int> dis(INT_MIN, INT_MAX);
 	this->seed = dis(gen);
 	mamemakiNoise = new FastNoise(seed);
+	mamemakiNoise->SetNoiseType(FastNoise::WhiteNoise);
 	perlinNoise = new FastNoise(seed);
+	perlinNoise->SetNoiseType(FastNoise::Perlin);
+	riverNoise = new FastNoise(seed);
+	riverNoise->SetNoiseType(FastNoise::WhiteNoise);
 	qDebug() << "seed = " << seed;
 
 	if(vmap){
@@ -26,8 +30,8 @@ VoronoiGen::VoronoiGen(Voronoi *vmap):
 		mapWidthY = vmap->height;
 	}
 
-	mapOffset[0] = 0;
-	mapOffset[1] = 0;
+	currentChunk[0] = 0;
+	currentChunk[1] = 0;
 	lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math);
 	loadScript();
 }
@@ -47,10 +51,9 @@ void VoronoiGen::loadScript(string path)
 	maxAltitude = (int)lua["MaxAltitude"];
 	mapWidthX = (int)lua["MapWidthX"];
 	mapWidthY = (int)lua["MapWidthY"];
-	mamemakiOffset = (int)lua["MamemakiOffset"];
 	perlinNoise->SetFrequency((float)lua["Noise"]["Frequency"]);
 	lua["Noise"]["getNoise"] = [this](float x, float y){
-		return perlinNoise->GetNoise(x, y);
+		return this->getNoise(x, y);
 	};
 	auto func = lua["Noise"]["Method"];
 	if(func.valid())
@@ -153,9 +156,9 @@ void VoronoiGen::generateTerrain()
 			if(jt->isAbstract() || jt->b == nullptr)
 				continue;
 			Point *a = jt->a;
-			a->terrain.height = (perlinNoise->GetNoise(a->x, a->y) + 1) / 2.0 * maxAltitude;
+			a->terrain.height = (this->getNoise(a->x, a->y) + 1) / 2.0 * maxAltitude;
 			Point *b = jt->b;
-			b->terrain.height = (perlinNoise->GetNoise(b->x, b->y) + 1) / 2.0 * maxAltitude;
+			b->terrain.height = (this->getNoise(b->x, b->y) + 1) / 2.0 * maxAltitude;
 		}
 		double sum = 0, avg;
 		int count = 0;
@@ -178,10 +181,7 @@ void VoronoiGen::generateTerrain()
 				t[i + 1][j + 1]["height"] = pointMap[i][j].terrain.height;
 			}
 		}
-		sol::table offset = lua.create_table();
-		offset["x"] = mapOffset[0];
-		offset["y"] = mapOffset[1];
-		t = terrainScriptMethod(t, offset);
+		t = terrainScriptMethod(t);
 		for (int i = 0; i < pointMap.size(); ++i) {
 			for (int j = 0; j < pointMap.at(i).size(); ++j) {
 				pointMap[i][j].terrain.height = t[i + 1][j + 1]["height"];
@@ -259,37 +259,86 @@ void VoronoiGen::generateWaters(double range)
 			pointMap[x][y].terrain.type = "";
 		}
 	}
+	// river generation
+	float startAltitude = (float)lua["RiverStartAltitude"] * maxAltitude;
+	float riverThreshold = (float)lua["RiverThreshold"];
+	auto cmp = [](Point* a, Point* b){return a->terrain.height < b->terrain.height;};
 	for (auto&& poly : vmap->polygons) {
 		for (const auto& edge : poly->edges) {
-			if(edge->a->terrain.height > poly->focus->terrain.height
-					|| edge->b->terrain.height > poly->focus->terrain.height)
+			if(edge->isRiver)
 				continue;
-			/*			if(edge->a->terrain.altitude > vmap->polygons[edge->parentID[0]]->focus->terrain.altitude
-				|| edge->b->terrain.altitude > vmap->polygons[edge->parentID[0]]->focus->terrain.altitude)
+			if(edge->a->terrain.height < startAltitude
+					&& edge->b->terrain.height < startAltitude)
 				continue;
-			if(edge->a->terrain.altitude > vmap->polygons[edge->parentID[1]]->focus->terrain.altitude
-				|| edge->b->terrain.altitude > vmap->polygons[edge->parentID[1]]->focus->terrain.altitude)
-				continue;*/
-			int minX, maxX, minY, maxY;
-			minX = mapWidthX;
-			minY = mapWidthY;
-			maxX = maxY = 0;
-			for (Point* Edge::*it : {&Edge::a, &Edge::b}) {
-				if(minX > (edge->*it)->x)	minX = (edge->*it)->x;
-				if(minY > (edge->*it)->y)	minY = (edge->*it)->y;
-				if(maxX < (edge->*it)->x)	maxX = (edge->*it)->x;
-				if(maxY < (edge->*it)->y)	maxY = (edge->*it)->y;
-			}
-			maxX = std::min(maxX + 1, mapWidthX);
-			maxY = std::min(maxY + 1, mapWidthY);
-			minX = std::max(minX - 1, 0);
-			minY = std::max(minY - 1, 0);
-			for (int x = minX; x < maxX; ++x) {
-				for (int y = minY; y < maxY; ++y) {
-					if(edge->distance(Point(x, y)) < range){
-						pointMap[x][y].terrain.type = "river";
+			Point* upper = std::max(edge->a, edge->b, cmp);
+			if(riverNoise->GetNoise(upper->x, upper->y) <= riverThreshold)
+				continue;
+			vector<Edge*> riverEdges;
+			riverEdges.push_back(edge);
+			Edge* river = edge;
+			river->isRiver = true;
+			river->mirror->isRiver = true;
+			for (;;) {
+				Point* lower = std::min(river->a, river->b, cmp);
+				vector<Edge*> riverCandidate;
+				bool joinRiver = false;
+				for (int index = 0; index < 2; ++index) {
+					Polygon* riverPoly = vmap->polygons[river->parentID[index]];
+					for (auto&& it : riverPoly->edges) {
+						if(*std::max(it->a, it->b, cmp) == *lower){
+							if(it->isRiver){
+								joinRiver = true;
+							}
+							riverCandidate.push_back(it);
+							break;
+						}
 					}
 				}
+				if(joinRiver)
+					break;
+				if(riverCandidate.size() == 0)
+					break;
+				if(riverCandidate.size() == 1){
+					river = riverCandidate[0];
+				}else{
+					// index 0 or index 1, two choices
+					int index = riverNoise->GetNoise(lower->x, lower->y) <= 0;
+					river = riverCandidate[index];
+				}
+				riverEdges.push_back(river);
+				river->isRiver = true;
+			}
+			for (const auto& it : riverEdges) {
+				int minX, maxX, minY, maxY;
+				minX = mapWidthX;
+				minY = mapWidthY;
+				maxX = maxY = 0;
+				for (Point* Edge::*jt : {&Edge::a, &Edge::b}) {
+					if(minX > (it->*jt)->x)	minX = (it->*jt)->x;
+					if(minY > (it->*jt)->y)	minY = (it->*jt)->y;
+					if(maxX < (it->*jt)->x)	maxX = (it->*jt)->x;
+					if(maxY < (it->*jt)->y)	maxY = (it->*jt)->y;
+				}
+				maxX = std::min(maxX + 1, mapWidthX);
+				maxY = std::min(maxY + 1, mapWidthY);
+				minX = std::max(minX - 1, 0);
+				minY = std::max(minY - 1, 0);
+				for (int x = minX; x < maxX; ++x) {
+					for (int y = minY; y < maxY; ++y) {
+						if(it->distance(Point(x, y)) < range){
+							pointMap[x][y].terrain.type = "river";
+						}
+					}
+				}
+			}
+		}
+	}
+	// water generation
+	float waterLayer = (float)lua["WaterLayer"] * maxAltitude;
+	for (int x = 0; x < pointMap.size(); ++x) {
+		for (int y = 0; y < pointMap.at(0).size(); ++y) {
+			if(pointMap[x][y].terrain.height < waterLayer){
+				pointMap[x][y].terrain.type = "water";
 			}
 		}
 	}
@@ -341,8 +390,15 @@ int VoronoiGen::getMaxAltitude()
 	return maxAltitude;
 }
 
-void VoronoiGen::mamemaki(const Rectangle&& range, double threshold)
+float VoronoiGen::getNoise(float x, float y)
 {
+	return perlinNoise->GetNoise(x + currentChunk[0] * mapWidthX, y + currentChunk[1] * mapWidthY);
+}
+
+void VoronoiGen::mamemaki(const Rectangle&& range)
+{
+	double threshold = (double)lua["MamemakiThreshold"];
+	int mamemakiOffset = (int)lua["MamemakiOffset"];
 	vector<pair<float, Point>> v;
 	for (int i = -mamemakiOffset; i < range.width + mamemakiOffset; ++i) {
 		for (int j =  -mamemakiOffset; j < range.height + mamemakiOffset; ++j) {
@@ -387,7 +443,6 @@ void VoronoiGen::Smooth::loadScript(string path)
 void VoronoiGen::Smooth::interpolateMethod(int iteration)
 {
 	if(scriptMethod){
-		qDebug() << "smooth by script";
 		sol::table t = parent->lua.create_table();
 		for (int i = 0; i < parent->pointMap.size(); ++i) {
 			t[i + 1] = parent->lua.create_table();
@@ -405,7 +460,6 @@ void VoronoiGen::Smooth::interpolateMethod(int iteration)
 			}
 		}
 	}else{
-		qDebug() << "smooth by default";
 		for (int iter = 0; iter < iteration; ++iter) {
 			vector< vector< voronoiMap::Point > > tempMap = parent->pointMap;
 			for (int x = 0; x < tempMap.size(); ++x) {

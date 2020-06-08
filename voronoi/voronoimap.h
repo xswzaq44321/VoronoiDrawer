@@ -70,6 +70,7 @@ struct Point
 	explicit operator PointF() const;
 	bool operator()(const Point& lhs, const Point& rhs);
 	Point& operator=(const Point& rhs);
+	bool operator==(const Point& rhs) const;
 };
 
 bool operator<(const Point& lhs, const Point& rhs);
@@ -96,15 +97,17 @@ class Edge
 public:
 	Edge();
 	Edge(int id1, int id2, bool is_abs = false);
-	Edge(const Edge* old);
+	Edge(Edge* old);
 	Edge(const Edge& old);
 	~Edge();
 
 	Point *a; // start point
 	Point *b; // end point
 	int parentID[2] = {-1, -1};
+	bool isRiver = false;
+	Edge* mirror;
 
-	Point* getParentID(const int& index);
+	Point* getPoint(const int& index);
 	bool hasParentID(const int id) const;
 	double distance(const Point& other) const;
 	bool isAbstract() const;

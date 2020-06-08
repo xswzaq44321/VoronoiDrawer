@@ -197,9 +197,9 @@ void SweepLine::beachAdd(Parabola *para)
 			beachParas.insert(beachParas.begin() + pos, para);
 		else
 			beachParas.insert(beachParas.begin() + pos + 1, para);
-		auto bar = new voronoiMap::Edge(para->poly->id, pj->poly->id);
-		bar->a = new voronoiMap::Point(-vmap->width, (pj->focus->y + para->focus->y) / 2);
-		para->poly->edges.push_back(new voronoiMap::Edge(bar));
+		auto bar = new Edge(para->poly->id, pj->poly->id);
+		bar->a = new Point(-vmap->width, (pj->focus->y + para->focus->y) / 2);
+		para->poly->edges.push_back(new Edge(bar));
 		pj->poly->edges.push_back(bar);
 		return;
 	}else if(beachParas.size() == 2){
@@ -228,9 +228,10 @@ void SweepLine::beachAdd(Parabola *para)
 	pos++;
 
 	// add to edges
-	para->poly->edges.push_back(new voronoiMap::Edge(para->poly->id, pj->poly->id, true));
+	auto bar = new Edge(para->poly->id, pj->poly->id, true);
+	para->poly->edges.push_back(new Edge(bar));
 	para->poly->adjacents.push_back(pj->poly);
-	pj->poly->edges.push_back(new voronoiMap::Edge(para->poly->id, pj->poly->id, true));
+	pj->poly->edges.push_back(bar);
 	pj->poly->adjacents.push_back(para->poly);
 
 	circleEvents.removeAll([&](Event* e){

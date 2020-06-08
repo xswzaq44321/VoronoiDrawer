@@ -51,7 +51,7 @@ void MainWindow::on_actionSave_Json_triggered()
 {
 	if(scene != nullptr && scene->voronoiGen.vmap != nullptr){
 		QString json_map = scene->voronoiGen.vmap->toJson(4).c_str();
-		QString filename = QFileDialog::getSaveFileName(this, "save json", ".", "voronoi map(*.json)");
+		QString filename = QFileDialog::getSaveFileName(this, "save json", "", "voronoi map(*.json)");
 		QFile file(filename);
 		if(file.open(QIODevice::WriteOnly | QIODevice::Truncate)){
 			QTextStream stream(&file);
@@ -64,20 +64,29 @@ void MainWindow::on_actionSave_Json_triggered()
 void MainWindow::on_actionLoad_Json_triggered()
 {
 	QString json_map;
-	QString filename = QFileDialog::getOpenFileName(this, "load json", ".", "voronoi map(*.json)");
+	QString filename = QFileDialog::getOpenFileName(this, "load json", "", "voronoi map(*.json)");
 	QFile file(filename);
 	if(file.open(QIODevice::ReadOnly)){
 		QTextStream stream(&file);
 		json_map = stream.readAll();
 
 		Voronoi* vmap = Voronoi::fromJson(json_map.toStdString());
-		if(scene == nullptr){
-			scene = new MyScene(vmap);
-			ui->graphicsView->setScene(scene);
-		}
+		delete scene;
+		scene = new MyScene(vmap);
+		ui->graphicsView->setScene(scene);
 		ui->graphicsView->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 	}
 	file.close();
+}
+
+void MainWindow::on_actionSave_Image_triggered()
+{
+	if(scene != nullptr){
+		QString filename = QFileDialog::getSaveFileName(this, "save image", "", "png(*.png)");
+		if(!filename.isEmpty()){
+			scene->mapCanvas->save(filename, "PNG");
+		}
+	}
 }
 
 void MainWindow::on_actionRun_Fortune_Algorithm_triggered(bool checked)
@@ -104,7 +113,7 @@ void MainWindow::on_actionRun_Lloyd_triggered()
 
 void MainWindow::on_actionRun_Mamemaki_triggered()
 {
-	scene->voronoiGen.mamemaki(Rectangle(0, 0, scene->voronoiGen.vmap->width, scene->voronoiGen.vmap->height), 0.99);
+	scene->voronoiGen.mamemaki(Rectangle(0, 0, scene->voronoiGen.vmap->width, scene->voronoiGen.vmap->height));
 	scene->syncVmap();
 	ui->actionRun_Fortune_Algorithm->setChecked(false);
 }

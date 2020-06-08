@@ -29,6 +29,7 @@ public:
 	SweepLine *sweepLine = nullptr;
 	FastNoise *mamemakiNoise;
 	FastNoise *perlinNoise;
+	FastNoise *riverNoise;
 	std::vector<std::vector<voronoiMap::Point>> pointMap;
 
 	/*!
@@ -39,12 +40,7 @@ public:
 	void loadScript(std::string path = "mods");
 	void setVmap(voronoiMap::Voronoi *vmap);
 	void clearVmap();
-	/*!
-	 * \brief mamemaki
-	 * \param range
-	 * \param threshold [-1.0~1.0]
-	 */
-	void mamemaki(const voronoiMap::Rectangle&& range, double threshold);
+	void mamemaki(const voronoiMap::Rectangle&& range);
 	int getSeed() const;
 	void stepFortune();
 	void performFortune();
@@ -79,13 +75,13 @@ public:
 private:
 	sol::state lua;
 	int seed;
-	int mamemakiOffset;
 	int maxAltitude;
 	int mapWidthX;
 	int mapWidthY;
-	std::function<sol::table(sol::table, sol::table)> terrainScriptMethod;
+	std::function<sol::table(sol::table)> terrainScriptMethod;
 
-	int mapOffset[2];
+	int currentChunk[2];
+	float getNoise(float x, float y);
 };
 
 #endif // VORONOIGEN_H

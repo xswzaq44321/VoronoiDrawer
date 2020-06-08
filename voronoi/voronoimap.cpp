@@ -90,6 +90,11 @@ Point &Point::operator=(const Point &rhs)
 	this->terrain = rhs.terrain;
 }
 
+bool Point::operator==(const Point &rhs) const
+{
+	return (this->x == rhs.x && this->y == rhs.y);
+}
+
 PointF::PointF()
 {
 }
@@ -131,7 +136,8 @@ PointF::operator Point() const
 
 Edge::Edge():
 	a(nullptr),
-	b(nullptr)
+	b(nullptr),
+	mirror(nullptr)
 {
 }
 
@@ -143,13 +149,15 @@ Edge::Edge(int id1, int id2, bool is_abs):
 	this->is_abstract = is_abs;
 }
 
-Edge::Edge(const Edge *old)
+Edge::Edge(Edge *old)
 {
 	this->a = old->a ? new Point(old->a) : nullptr;
 	this->b = old->b ? new Point(old->b) : nullptr;
 	this->parentID[0] = old->parentID[0];
 	this->parentID[1] = old->parentID[1];
 	this->is_abstract = old->is_abstract;
+	this->mirror = old;
+	old->mirror = this;
 }
 
 Edge::Edge(const Edge &old)
@@ -167,7 +175,7 @@ Edge::~Edge()
 	delete b;
 }
 
-Point* Edge::getParentID(const int &index)
+Point* Edge::getPoint(const int &index)
 {
 	if(index == 0)
 		return a;

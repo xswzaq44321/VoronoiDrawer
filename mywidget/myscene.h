@@ -28,6 +28,7 @@ public:
 	QVector<std::shared_ptr<MyGraphicsEllipseItem>> ellipseItems;
 	QVector<std::shared_ptr<QGraphicsLineItem>> lineItems;
 	QVector<std::shared_ptr<QGraphicsItem>> assistantItems;
+	QPixmap* mapCanvas = nullptr;
 
 	/*!
 		\brief creates a blank vmap
@@ -70,7 +71,6 @@ private:
 
 	bool autoFortune = false;
 	QImage terrProg; // terrain color progress
-	QPixmap* mapCanvas;
 	QGraphicsPixmapItem *mapCanvasItem = nullptr;
 };
 

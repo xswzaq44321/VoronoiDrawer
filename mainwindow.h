@@ -44,6 +44,7 @@ private slots:
 	void on_actionRun_Water_Gen_triggered();
 	void on_actionRun_Biome_Gen_triggered();
 	void on_actionReload_Script_triggered();
+	void on_actionSave_Image_triggered();
 };
 
 #endif // MAINWINDOW_H
