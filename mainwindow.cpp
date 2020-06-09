@@ -89,6 +89,20 @@ void MainWindow::on_actionSave_Image_triggered()
 	}
 }
 
+void MainWindow::on_actionSave_Voronoi_Image_triggered()
+{
+	if(scene != nullptr){
+		QString filename = QFileDialog::getSaveFileName(this, "save image", "", "png(*.png)");
+		if(!filename.isEmpty()){
+			QPixmap image(scene->width(), scene->height());
+			QPainter painter(&image);
+			QRect rect(0, 0, scene->width(), scene->height());
+			scene->render(&painter, image.rect(), rect);
+			image.save(filename, "PNG");
+		}
+	}
+}
+
 void MainWindow::on_actionRun_Fortune_Algorithm_triggered(bool checked)
 {
 	if(checked){

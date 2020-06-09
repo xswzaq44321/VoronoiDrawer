@@ -44,6 +44,7 @@
     </property>
     <addaction name="actionSave_Json"/>
     <addaction name="actionSave_Image"/>
+    <addaction name="actionSave_Voronoi_Image"/>
    </widget>
    <widget class="QMenu" name="menuLoad">
     <property name="title">
@@ -163,6 +164,11 @@
   <action name="actionReload_Script">
    <property name="text">
     <string>Reload Script</string>
+   </property>
+  </action>
+  <action name="actionSave_Voronoi_Image">
+   <property name="text">
+    <string>Save Voronoi Image</string>
    </property>
   </action>
  </widget>

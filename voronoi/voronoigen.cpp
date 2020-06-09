@@ -14,6 +14,7 @@ VoronoiGen::VoronoiGen(Voronoi *vmap):
 {
 	random_device rd;
 	default_random_engine gen = std::default_random_engine(rd());
+//	gen.seed(time(NULL));
 	uniform_int_distribution<int> dis(INT_MIN, INT_MAX);
 	this->seed = dis(gen);
 	mamemakiNoise = new FastNoise(seed);
@@ -271,7 +272,11 @@ void VoronoiGen::generateWaters(double range)
 					&& edge->b->terrain.height < startAltitude)
 				continue;
 			Point* upper = std::max(edge->a, edge->b, cmp);
+			if(upper->x < 0 || upper->x >= mapWidthX || upper->y < 0 || upper->y >= mapWidthY)
+				continue;
 			if(riverNoise->GetNoise(upper->x, upper->y) <= riverThreshold)
+				continue;
+			if(pointMap[upper->x][upper->y].terrain.type == "river")
 				continue;
 			vector<Edge*> riverEdges;
 			riverEdges.push_back(edge);
@@ -308,6 +313,7 @@ void VoronoiGen::generateWaters(double range)
 				riverEdges.push_back(river);
 				river->isRiver = true;
 			}
+			double tmpRange = range;
 			for (const auto& it : riverEdges) {
 				int minX, maxX, minY, maxY;
 				minX = mapWidthX;
@@ -319,17 +325,18 @@ void VoronoiGen::generateWaters(double range)
 					if(maxX < (it->*jt)->x)	maxX = (it->*jt)->x;
 					if(maxY < (it->*jt)->y)	maxY = (it->*jt)->y;
 				}
-				maxX = std::min(maxX + 1, mapWidthX);
-				maxY = std::min(maxY + 1, mapWidthY);
-				minX = std::max(minX - 1, 0);
-				minY = std::max(minY - 1, 0);
+				maxX = std::min(maxX + (int)ceil(tmpRange), mapWidthX);
+				maxY = std::min(maxY + (int)ceil(tmpRange), mapWidthY);
+				minX = std::max(minX - (int)ceil(tmpRange), 0);
+				minY = std::max(minY - (int)ceil(tmpRange), 0);
 				for (int x = minX; x < maxX; ++x) {
 					for (int y = minY; y < maxY; ++y) {
-						if(it->distance(Point(x, y)) < range){
+						if(it->distance(Point(x, y)) < tmpRange){
 							pointMap[x][y].terrain.type = "river";
 						}
 					}
 				}
+				tmpRange *= 1.05;
 			}
 		}
 	}
